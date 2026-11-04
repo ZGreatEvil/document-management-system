@@ -213,6 +213,9 @@ class Project(models.Model):
             'context': {'default_project_id': self.id},
         }
 
+    def action_dms_upload_folder(self):
+        return self.env['res.users'].action_dms_upload_folder()
+
     def action_dms_open_files(self):
         self.ensure_one()
         action = self.env['ir.actions.act_window']._for_xml_id('document_management_system.action_dms_file')

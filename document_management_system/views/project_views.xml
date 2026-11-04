@@ -33,6 +33,8 @@
                     <div class="mb16" attrs="{'invisible': [('dms_unique_code_id', '=', False)]}">
                         <button name="action_dms_add_file" type="object" string="Add file" icon="fa-upload"
                                 class="btn-primary"/>
+                        <button name="action_dms_upload_folder" type="object" string="My upload folder"
+                                icon="fa-folder-open-o" class="btn-secondary ml8"/>
                     </div>
                     <field name="dms_file_ids" readonly="1" attrs="{'invisible': [('dms_unique_code_id', '=', False)]}">
                         <tree decoration-muted="state in ('superseded', 'removed')" decoration-danger="state == 'error'">

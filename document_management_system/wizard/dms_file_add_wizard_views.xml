@@ -9,11 +9,21 @@
                 <field name="unique_code_id" invisible="1"/>
                 <field name="current_file_id" invisible="1"/>
                 <group>
-                    <field name="file" filename="filename" required="1"/>
+                    <field name="mode" widget="radio" options="{'horizontal': true}"/>
+                    <field name="file" filename="filename"
+                           attrs="{'invisible': [('mode', '!=', 'upload')], 'required': [('mode', '=', 'upload')]}"/>
                     <field name="filename" invisible="1"/>
+                    <field name="link" placeholder="https://..."
+                           attrs="{'invisible': [('mode', '!=', 'link')], 'required': [('mode', '=', 'link')]}"/>
                     <field name="number_id" options="{'no_create': True, 'no_open': True}"/>
                     <field name="final_name" attrs="{'invisible': [('final_name', '=', False)]}"/>
                 </group>
+                <div class="text-muted mb16" attrs="{'invisible': [('mode', '!=', 'link')]}">
+                    For large files: put the file in your own upload folder in SharePoint, use "Copy link" on it and
+                    paste the link here. The file is then moved into the project folder.
+                    <button name="action_upload_folder" type="object" string="My upload folder" icon="fa-folder-open-o"
+                            class="btn-link"/>
+                </div>
                 <div class="alert alert-warning" role="alert" attrs="{'invisible': [('current_file_id', '=', False)]}">
                     This number already has a file: <strong><field name="current_file_name" class="oe_inline"/></strong>.
                     <div class="mt8">
@@ -23,7 +33,10 @@
                 </div>
                 <p class="text-muted">
                     The file goes into the project's SharePoint folder and only the project's members can open it.
-                    Files larger than the upload limit (128 MB unless your administrator changed it) cannot be added here.
+                    <span attrs="{'invisible': [('mode', '!=', 'upload')]}">
+                        Uploads are limited to 128 MB unless your administrator changed it; for larger files, paste a
+                        SharePoint link instead.
+                    </span>
                 </p>
                 <footer>
                     <button name="action_add" type="object" string="Add file" class="btn-primary"/>

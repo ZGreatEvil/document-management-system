@@ -26,6 +26,7 @@ class DmsCommon(SavepointCase):
         params = env['ir.config_parameter'].sudo()
         params.set_param(PARAM_PREFIX + 'drive_id', 'drive-1')
         params.set_param(PARAM_PREFIX + 'projects_folder_id', 'projects-root')
+        params.set_param(PARAM_PREFIX + 'intake_folder_id', 'intake-root')
         # own companies, codes and numbers, so the tests also pass on a database holding real data
         cls.company = env.company
         cls.company_b = env['res.company'].create({'name': 'DMS Test Company B'})

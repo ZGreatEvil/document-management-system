@@ -186,7 +186,7 @@ class TestUpload(DmsCommon):
         self.assertEqual(self.graph.items[item_id]['parent'], self.project.sudo().dms_folder_item_id)
         # the url grant answered with, not the one createLink gave
         self.assertEqual(file.share_url, 'https://sharepoint.test/link/%s?granted' % item_id)
-        self.assertEqual(self.graph.grants[item_id], {'dms_member@example.test'})
+        self.assertEqual(self.graph.emails_on_link(item_id), {'dms_member@example.test'})
         self.assertEqual(file.sudo().grant_ids.mapped('user_id'), self.member)
         self.assertEqual(file.sudo().link_permission_id, 'perm-%s' % item_id)
         put = next(path for method, path in self.graph.calls if method == 'PUT')
@@ -277,7 +277,7 @@ class TestUpload(DmsCommon):
         self.wizard(user=self.manager).action_add()
         file = self.files()
         # access goes to the members only, not to the manager who uploaded
-        self.assertEqual(self.graph.grants[file.sudo().item_id], {'dms_member@example.test'})
+        self.assertEqual(self.graph.emails_on_link(file.sudo().item_id), {'dms_member@example.test'})
 
     def test_project_without_code_refused(self):
         project = self.env['project.project'].create({'name': 'No code', 'company_id': self.company.id})

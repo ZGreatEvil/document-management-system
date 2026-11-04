@@ -6,7 +6,8 @@ Odoo 14 Community module (in progress) that stores project files in SharePoint: 
 
 - Phase 0, Microsoft Graph proof of concept: written, waiting for a run against the test tenant.
 - Phase 1, module skeleton (`document_management_system/`, version 14.0.1.0.0): data model, security groups and rules, settings screen with a connection test, and the Graph client.
-- Phase 2, folders and upload: linking a project to its unique code creates its SharePoint folder; members add files from the project's Files tab (upload, optionally named after a document number); each file gets a view-only link shared with the project's members. Paste-a-link, upload folders and the member sync come next.
+- Phase 2, folders and upload: linking a project to its unique code creates its SharePoint folder; members add files from the project's Files tab (upload, optionally named after a document number); each file gets a view-only link shared with the project's members.
+- Phase 3, upload folders and pasted links: each user gets a personal upload folder in SharePoint ("My upload folder"); for large files they put the file there, copy its link and paste it in Odoo, which moves it into the project folder and shares it like an upload. Links to folders, to files outside the user's own upload folder, and to files already added are refused. The member sync comes next.
 
 ## Module tests
 

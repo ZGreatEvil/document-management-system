@@ -117,6 +117,46 @@ def share_with(client, drive_id, item_id, emails):
     return perm['id'], url
 
 
+def move_item(client, drive_id, item_id, parent_id, name, rename=False):
+    """moves and renames in one PATCH. graph documents no conflict option for this, so with rename=True
+    a taken name becomes 'name 1', 'name 2', ...; without it a taken name raises the 409"""
+    stem, ext = os.path.splitext(name)
+    tries = 10 if rename else 1
+    for attempt in range(tries):
+        candidate = name if not attempt else '%s %d%s' % (stem, attempt, ext)
+        try:
+            return client.patch('/drives/%s/items/%s' % (drive_id, item_id), json={
+                'parentReference': {'id': parent_id}, 'name': candidate,
+            })
+        except DmsGraphError as e:
+            if e.status != 409 or attempt == tries - 1:
+                raise
+
+
+def list_permissions(client, drive_id, item_id):
+    url = '/drives/%s/items/%s/permissions' % (drive_id, item_id)
+    perms = []
+    while url:
+        page = client.get(url)
+        perms.extend(page.get('value') or [])
+        url = page.get('@odata.nextLink')
+    return perms
+
+
+def remove_links(client, drive_id, item_id, keep=()):
+    """deletes the sharing links on an item (made with "copy link" or otherwise), except the ids in keep.
+    sharepoint lists inherited permissions without saying so, so nothing but links is touched;
+    "existing access" links give nothing and are left alone. returns how many were deleted"""
+    removed = 0
+    for perm in list_permissions(client, drive_id, item_id):
+        link = perm.get('link') or {}
+        if not link or link.get('scope') == 'existingAccess' or perm['id'] in keep:
+            continue
+        client.delete('/drives/%s/items/%s/permissions/%s' % (drive_id, item_id, perm['id']))
+        removed += 1
+    return removed
+
+
 def delete_item(client, drive_id, item_id):
     """clean-up after a failed add (best effort: the error that caused it is what the user sees)"""
     try:

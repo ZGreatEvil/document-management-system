@@ -14,6 +14,10 @@ class DmsFileAddWizard(models.TransientModel):
 
     project_id = fields.Many2one('project.project', required=True, readonly=True, ondelete='cascade')
     unique_code_id = fields.Many2one(related='project_id.dms_unique_code_id')
+    mode = fields.Selection([('upload', 'Upload from this computer'), ('link', 'Paste a SharePoint link')],
+                            string='How', default='upload', required=True)
+    link = fields.Char(string='SharePoint Link',
+                       help='The link of a file in your own upload folder (in SharePoint: the file\'s "Copy link").')
     # attachment=False: the content stays in this transient record only, never in the filestore
     # (not required at database level: the content is cleared once the file is in sharepoint)
     file = fields.Binary(string='File', attachment=False)
@@ -38,10 +42,14 @@ class DmsFileAddWizard(models.TransientModel):
             wizard.current_file_id = current
             wizard.current_file_name = current.sudo().name or False
 
-    @api.depends('filename', 'number_id')
+    @api.depends('mode', 'filename', 'number_id')
     def _compute_final_name(self):
         for wizard in self:
-            if not wizard.filename:
+            if wizard.mode == 'link':
+                # the file's own name is only known once the link is resolved
+                wizard.final_name = wizard.number_id and _('%s + the file\'s extension') % sharepoint.number_filename(
+                    wizard.number_id.display_number, '')
+            elif not wizard.filename:
                 wizard.final_name = False
             elif wizard.number_id:
                 wizard.final_name = sharepoint.number_filename(wizard.number_id.display_number, wizard.filename)
@@ -61,12 +69,17 @@ class DmsFileAddWizard(models.TransientModel):
         self.ensure_one()
         project = self.project_id
         project._dms_check_can_add()
-        if not self.file:
-            raise UserError(_('Choose a file to add.'))
-        try:
-            data = base64.b64decode(self.file)
-        except (binascii.Error, ValueError):
-            raise UserError(_('The file could not be read. Choose it again.'))
+        data = None
+        if self.mode == 'link':
+            if not (self.link or '').strip():
+                raise UserError(_('Paste the link of the file in your upload folder.'))
+        else:
+            if not self.file:
+                raise UserError(_('Choose a file to add.'))
+            try:
+                data = base64.b64decode(self.file)
+            except (binascii.Error, ValueError):
+                raise UserError(_('The file could not be read. Choose it again.'))
         number = self.number_id
         current = self.env['dms.file']
         if number:
@@ -77,8 +90,14 @@ class DmsFileAddWizard(models.TransientModel):
                 raise UserError(_('%(number)s already has a file (%(name)s). Tick "Replace the current file" to add '
                                   'this one as the new version; the old one is kept as superseded.',
                                   number=number.display_number, name=current.name))
-        self.env['dms.file']._dms_add(project, data, self.filename or 'file', number=number or None,
-                                      supersede=current or None)
-        # the content is no longer needed
-        self.write({'file': False})
+        File = self.env['dms.file']
+        if self.mode == 'link':
+            File._dms_add_from_link(project, self.link, number=number or None, supersede=current or None)
+        else:
+            File._dms_add(project, data, self.filename or 'file', number=number or None, supersede=current or None)
+            # the content is no longer needed
+            self.write({'file': False})
         return {'type': 'ir.actions.act_window_close'}
+
+    def action_upload_folder(self):
+        return self.env['res.users'].action_dms_upload_folder()

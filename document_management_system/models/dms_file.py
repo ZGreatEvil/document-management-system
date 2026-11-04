@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import logging
 import mimetypes
 
 from odoo import _, api, fields, models
@@ -7,6 +8,8 @@ from odoo.tools.mimetypes import guess_mimetype
 
 from . import sharepoint
 from .graph_client import DmsGraphError, GraphClient, get_settings
+
+_logger = logging.getLogger(__name__)
 
 MANAGER_GROUP = 'document_management_system.group_dms_manager'
 
@@ -171,6 +174,108 @@ class DmsFile(models.Model):
                 sharepoint.delete_item(client, drive_id, item['id'])
             raise
         return file
+
+    @api.model
+    def _dms_resolve_intake_link(self, client, url):
+        """the file behind a pasted link, refused unless it is a file directly in the user's own upload folder,
+        in the configured library, and not added before"""
+        url = (url or '').strip()
+        if not url.lower().startswith('https://'):
+            raise UserError(_('Paste the link you copied in SharePoint. It starts with https://'))
+        intake_id = self.env.user.sudo().dms_intake_item_id
+        if not intake_id:
+            raise UserError(_('Open "My upload folder" first, put the file there, then copy the file\'s link.'))
+        try:
+            item = client.get('/shares/%s/driveItem?$select=id,name,size,file,folder,parentReference'
+                              % sharepoint.encode_share_url(url))
+        except DmsGraphError as e:
+            if e.status in (400, 403, 404):
+                raise UserError(_('This link does not lead to a file Odoo can open. Copy the link of the file in '
+                                  'your upload folder again.'))
+            raise UserError(self._dms_error_message(e))
+        name = item.get('name') or _('This item')
+        if 'folder' in item or 'file' not in item:
+            raise UserError(_('%s is a folder. Copy the link of the file itself, not of a folder.') % name)
+        if self.sudo().search_count([('item_id', '=', item['id'])]):
+            raise UserError(_('%s has already been added to a project.') % name)
+        parent = item.get('parentReference') or {}
+        if parent.get('driveId') and parent['driveId'] != get_settings(self.env)['drive_id']:
+            raise UserError(_('%s is not in the project document library. Put it in your upload folder first.') % name)
+        if parent.get('id') != intake_id:
+            raise UserError(_('%s is not in your upload folder. Move it into your upload folder (not into a folder '
+                              'inside it), then copy its link again.') % name)
+        return item
+
+    @api.model
+    def _dms_add_from_link(self, project, url, number=None, supersede=None):
+        """7.3: moves a file from the user's own upload folder into the project folder, renamed, removes the links
+        others made on it, then shares and records it like an upload. when a step fails the file goes back to the
+        upload folder under its own name and nothing is saved in odoo"""
+        project = project.sudo()
+        folder_id = project._dms_ensure_folder()
+        drive_id = get_settings(self.env)['drive_id']
+        intake_id = self.env.user.sudo().dms_intake_item_id
+        try:
+            client = self._dms_client()
+        except DmsGraphError as e:
+            raise UserError(self._dms_error_message(e))
+        item = self._dms_resolve_intake_link(client, url)
+        original = item.get('name') or 'file'
+        if number:
+            name = sharepoint.number_filename(number.display_number, original)
+        else:
+            name = sharepoint.clean_filename(original)
+        name = sharepoint.fit_length(name, project._dms_folder_path())
+        emails = {user: user._dms_email() for user in project.dms_member_user_ids}
+        moved = None
+        try:
+            moved = sharepoint.move_item(client, drive_id, item['id'], folder_id, name, rename=not number)
+            sharepoint.remove_links(client, drive_id, item['id'])
+            permission_id, share_url = sharepoint.share_with(client, drive_id, item['id'], sorted(set(emails.values())))
+            if supersede:
+                supersede.sudo().write({'state': 'superseded'})
+            file = self.sudo().create({
+                'name': moved.get('name') or name,
+                'project_id': project.id,
+                'number_id': number.id if number else False,
+                'original_filename': original,
+                'source': 'link',
+                'drive_id': drive_id,
+                'item_id': item['id'],
+                'link_permission_id': permission_id,
+                'share_url': share_url,
+                'size': item.get('size') or 0,
+                'mimetype': (item.get('file') or {}).get('mimeType') or mimetypes.guess_type(original)[0],
+                'uploaded_by_id': self.env.uid,
+            })
+            self.env['dms.file.grant'].sudo().create([
+                {'file_id': file.id, 'user_id': user.id, 'email': email} for user, email in emails.items()])
+        except DmsGraphError as e:
+            if moved:
+                self._dms_undo_move(client, drive_id, item['id'], intake_id, original)
+            if number and e.status == 409 and not moved:
+                raise UserError(_('%s is already in the project folder. If this is a new version of the document, '
+                                  'add a revision to the number first.') % name)
+            raise UserError(self._dms_error_message(e))
+        except Exception:
+            if moved:
+                self._dms_undo_move(client, drive_id, item['id'], intake_id, original)
+            raise
+        return file
+
+    @api.model
+    def _dms_undo_move(self, client, drive_id, item_id, intake_id, original):
+        """the user's file goes back where it was, without any link (odoo's may exist even when the grant
+        failed); it is never deleted"""
+        try:
+            sharepoint.remove_links(client, drive_id, item_id)
+        except DmsGraphError as e:
+            _logger.warning('graph: links on a file could not be removed: HTTP %s %s', e.status, e.code)
+        try:
+            sharepoint.move_item(client, drive_id, item_id, intake_id, original, rename=True)
+        except DmsGraphError as e:
+            _logger.warning('graph: a file could not be moved back to its upload folder: HTTP %s %s',
+                            e.status, e.code)
 
     def action_open(self):
         self.ensure_one()

@@ -214,7 +214,9 @@ def grant(g, s, email):
 
 def describe(perm):
     link = perm.get('link') or {}
-    kind = 'link %s/%s' % (link.get('type'), link.get('scope')) if link else 'direct'
+    granted = perm.get('grantedToV2') or {}
+    holder = 'group' if (granted.get('siteGroup') or granted.get('group')) else 'user' if granted.get('user') else '?'
+    kind = 'link %s/%s' % (link.get('type'), link.get('scope')) if link else 'direct (%s)' % holder
     extra = ' by app' if link.get('application') else ''
     inherited = ' inherited' if perm.get('inheritedFrom') else ''
     return '%s%s%s roles=%s grantees=%d' % (kind, extra, inherited, ','.join(perm.get('roles') or []),
@@ -368,9 +370,15 @@ def step_delete_link(g, s):
     check(links, 'no link permission found on the moved file')
     for perm in links:
         g.call('DELETE', '%s/%s' % (url, perm['id']), expect=(204,))
-    left = [p for p in g.call('GET', url).json().get('value') or [] if p.get('link')]
+    remaining = g.call('GET', url).json().get('value') or []
+    # what else stays on a file moved out of an upload folder (sharepoint does not say what is inherited):
+    # a direct write permission for the uploader here means the module must remove it too
+    for perm in remaining:
+        print('      - left on moved file: %s' % describe(perm))
+    left = [p for p in remaining if p.get('link')]
     check(not left, '%d link(s) still there after DELETE' % len(left))
-    return 'deleted %d link(s) on the moved file; none left' % len(links)
+    return 'deleted %d link(s) on the moved file; none left; %d other permission(s) listed above' % (
+        len(links), len(remaining))
 
 
 def step_invite(g, s):

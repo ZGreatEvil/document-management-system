@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_dms_root" name="Project Files" parent="document_library.menu_document_library_root"
+              sequence="40" groups="group_dms_user"/>
+    <menuitem id="menu_dms_projects" name="Projects" parent="menu_dms_root" action="action_dms_projects" sequence="10"/>
+    <menuitem id="menu_dms_files" name="Files" parent="menu_dms_root" action="action_dms_file" sequence="20"/>
+</odoo>

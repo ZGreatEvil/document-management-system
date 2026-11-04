@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="edit_project_inherit_dms" model="ir.ui.view">
+        <field name="name">project.project.form.inherit.document_management_system</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button class="oe_stat_button" type="object" name="action_dms_open_files" icon="fa-folder-open"
+                        attrs="{'invisible': [('dms_unique_code_id', '=', False)]}">
+                    <field string="Files" name="dms_file_count" widget="statinfo"/>
+                </button>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page name="dms_files" string="Files">
+                    <field name="dms_can_manage" invisible="1"/>
+                    <group>
+                        <group>
+                            <field name="dms_unique_code_id" options="{'no_create': True}"
+                                   attrs="{'readonly': [('dms_can_manage', '=', False)]}"/>
+                            <field name="dms_sync_state" attrs="{'invisible': [('dms_unique_code_id', '=', False)]}"/>
+                            <field name="dms_last_sync" attrs="{'invisible': [('dms_unique_code_id', '=', False)]}"/>
+                        </group>
+                        <group groups="document_management_system.group_dms_manager">
+                            <field name="dms_folder_item_id"/>
+                            <field name="dms_last_error" attrs="{'invisible': [('dms_last_error', '=', False)]}"/>
+                        </group>
+                    </group>
+                    <div class="text-muted mb16" attrs="{'invisible': [('dms_unique_code_id', '!=', False)]}">
+                        Files can be added once a Document Management administrator links this project to its
+                        unique code.
+                    </div>
+                    <div class="mb16" attrs="{'invisible': [('dms_unique_code_id', '=', False)]}">
+                        <button name="action_dms_add_file" type="object" string="Add file" icon="fa-upload"
+                                class="btn-primary"/>
+                    </div>
+                    <field name="dms_file_ids" readonly="1" attrs="{'invisible': [('dms_unique_code_id', '=', False)]}">
+                        <tree decoration-muted="state in ('superseded', 'removed')" decoration-danger="state == 'error'">
+                            <field name="name"/>
+                            <field name="number_id"/>
+                            <field name="uploaded_by_id" widget="many2one_avatar_user"/>
+                            <field name="uploaded_on"/>
+                            <field name="state" widget="badge" decoration-success="state == 'shared'"
+                                   decoration-danger="state == 'error'"/>
+                            <field name="share_url" invisible="1"/>
+                            <button name="action_open" type="object" string="Open" icon="fa-external-link"
+                                    attrs="{'invisible': ['|', ('state', '=', 'removed'), ('share_url', '=', False)]}"/>
+                        </tree>
+                    </field>
+                    <group string="Who can open the files" attrs="{'invisible': [('dms_unique_code_id', '=', False)]}">
+                        <field name="dms_member_user_ids" widget="many2many_tags" readonly="1"/>
+                        <field name="dms_extra_member_ids" widget="many2many_tags" options="{'no_create': True}"
+                               attrs="{'readonly': [('dms_can_manage', '=', False)]}"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

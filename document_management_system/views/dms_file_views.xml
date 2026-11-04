@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="dms_file_view_tree" model="ir.ui.view">
+        <field name="name">dms.file.tree</field>
+        <field name="model">dms.file</field>
+        <field name="arch" type="xml">
+            <tree string="Project Files" create="0" delete="0" decoration-muted="state in ('superseded', 'removed')"
+                  decoration-danger="state == 'error'">
+                <field name="name"/>
+                <field name="project_id" optional="show"/>
+                <field name="number_id" optional="show"/>
+                <field name="uploaded_by_id" widget="many2one_avatar_user" optional="show"/>
+                <field name="uploaded_on" optional="show"/>
+                <field name="state" widget="badge" decoration-success="state == 'shared'"
+                       decoration-danger="state == 'error'"/>
+                <field name="share_url" invisible="1"/>
+                <button name="action_open" type="object" string="Open" icon="fa-external-link"
+                        attrs="{'invisible': ['|', ('state', '=', 'removed'), ('share_url', '=', False)]}"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="dms_file_view_form" model="ir.ui.view">
+        <field name="name">dms.file.form</field>
+        <field name="model">dms.file</field>
+        <field name="arch" type="xml">
+            <form string="Project File" create="0" delete="0" edit="0">
+                <header>
+                    <button name="action_open" type="object" string="Open" class="btn-primary" icon="fa-external-link"
+                            attrs="{'invisible': ['|', ('state', '=', 'removed'), ('share_url', '=', False)]}"/>
+                    <field name="state" widget="statusbar" statusbar_visible="shared,superseded"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="project_id"/>
+                            <field name="unique_code_id"/>
+                            <field name="number_id"/>
+                            <field name="original_filename"/>
+                        </group>
+                        <group>
+                            <field name="uploaded_by_id" widget="many2one_avatar_user"/>
+                            <field name="uploaded_on"/>
+                            <field name="source"/>
+                            <field name="mimetype"/>
+                            <field name="share_url" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook groups="document_management_system.group_dms_manager">
+                        <page name="sharepoint" string="SharePoint">
+                            <group>
+                                <field name="drive_id"/>
+                                <field name="item_id"/>
+                                <field name="link_permission_id"/>
+                                <field name="last_error"/>
+                            </group>
+                            <field name="grant_ids">
+                                <tree>
+                                    <field name="user_id"/>
+                                    <field name="email"/>
+                                    <field name="granted_on"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="dms_file_view_search" model="ir.ui.view">
+        <field name="name">dms.file.search</field>
+        <field name="model">dms.file</field>
+        <field name="arch" type="xml">
+            <search string="Project Files">
+                <field name="name"/>
+                <field name="project_id"/>
+                <field name="unique_code_id"/>
+                <field name="number_id"/>
+                <field name="uploaded_by_id"/>
+                <filter name="shared" string="Shared" domain="[('state', '=', 'shared')]"/>
+                <filter name="superseded" string="Superseded" domain="[('state', '=', 'superseded')]"/>
+                <separator/>
+                <filter name="mine" string="Uploaded by me" domain="[('uploaded_by_id', '=', uid)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_project" string="Project" context="{'group_by': 'project_id'}"/>
+                    <filter name="group_number" string="Document Number" context="{'group_by': 'number_id'}"/>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_dms_file" model="ir.actions.act_window">
+        <field name="name">Files</field>
+        <field name="res_model">dms.file</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="dms_file_view_search"/>
+        <field name="domain">[]</field>
+        <field name="context">{'search_default_shared': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_empty_folder">No files yet</p>
+            <p>Files are added from a project, with the "Add file" button on its Files tab.
+               You see the files of the projects you are a member of.</p>
+        </field>
+    </record>
+
+    <record id="action_dms_projects" model="ir.actions.act_window">
+        <field name="name">Projects with Files</field>
+        <field name="res_model">project.project</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="domain">[('dms_unique_code_id', '!=', False)]</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No projects with a unique code yet</p>
+            <p>A Document Management administrator links a project to its unique code on the project's Files tab.</p>
+        </field>
+    </record>
+</odoo>

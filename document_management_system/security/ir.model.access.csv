@@ -2,3 +2,4 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_dms_file_user,dms.file user,model_dms_file,group_dms_user,1,0,0,0
 access_dms_file_manager,dms.file manager,model_dms_file,group_dms_manager,1,0,0,0
 access_dms_file_grant_manager,dms.file.grant manager,model_dms_file_grant,group_dms_manager,1,0,0,0
+access_dms_file_add_wizard_user,dms.file.add.wizard user,model_dms_file_add_wizard,group_dms_user,1,1,1,1

@@ -1,10 +1,16 @@
 # -*- coding: utf-8 -*-
+from unittest.mock import patch
+
 from psycopg2 import IntegrityError
 
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tests import tagged
 from odoo.tests.common import SavepointCase, new_test_user
 from odoo.tools import mute_logger
+
+from odoo.addons.document_management_system.models.graph_client import PARAM_PREFIX
+
+from .common import FakeGraph
 
 
 class DmsCommon(SavepointCase):
@@ -13,6 +19,13 @@ class DmsCommon(SavepointCase):
     def setUpClass(cls):
         super().setUpClass()
         env = cls.env
+        # graph is never called for real: every client is the in-memory fake
+        cls.graph = FakeGraph()
+        cls._graph_patch = patch.object(type(env['dms.file']), '_dms_client', lambda self: cls.graph)
+        cls._graph_patch.start()
+        params = env['ir.config_parameter'].sudo()
+        params.set_param(PARAM_PREFIX + 'drive_id', 'drive-1')
+        params.set_param(PARAM_PREFIX + 'projects_folder_id', 'projects-root')
         # own companies, codes and numbers, so the tests also pass on a database holding real data
         cls.company = env.company
         cls.company_b = env['res.company'].create({'name': 'DMS Test Company B'})
@@ -27,6 +40,21 @@ class DmsCommon(SavepointCase):
         cls.project_manager = make_user('dms_pm', 'base.group_user,project.group_project_manager')
         cls.manager = make_user('dms_manager', 'base.group_user,project.group_project_manager,'
                                                'document_management_system.group_dms_manager')
+        for user in (cls.member, cls.outsider, cls.project_manager, cls.manager):
+            user.dms_m365_email = '%s@example.test' % user.login
+
+        # the member works in the technical division, which numbers BSTs
+        cls.dept_tec = env['hr.department'].create({'name': 'DMS Technical (test)', 'company_id': cls.company.id})
+        cls.dept_fna = env['hr.department'].create({'name': 'DMS Finance (test)', 'company_id': cls.company.id})
+        cls.div_tec = env.ref('document_numbering.division_tec')
+        cls.div_fna = env.ref('document_numbering.division_fna')
+        cls.div_tec.department_ids = cls.dept_tec
+        cls.div_fna.department_ids = cls.dept_fna
+        cls.emp_member = env['hr.employee'].create({'name': 'DMS member', 'user_id': cls.member.id,
+                                                    'department_id': cls.dept_tec.id, 'company_id': cls.company.id})
+        cls.type_bst = env.ref('document_numbering.type_bst')
+        cls.type_srt = env.ref('document_numbering.type_srt')
+        cls.type_wo = env.ref('document_numbering.type_wo')
 
         project_type = env['doc.number.project'].create({
             'name': 'DMS test type', 'code': env['doc.number.project']._default_code() + 100,
@@ -45,16 +73,31 @@ class DmsCommon(SavepointCase):
 
         cls.project = env['project.project'].create({'name': 'DMS test project', 'company_id': cls.company.id,
                                                      'dms_unique_code_id': cls.code.id})
-        cls.project.dms_member_user_ids = cls.member
+        cls.project.dms_extra_member_ids = cls.member
 
         cls.type_qtn = env.ref('document_numbering.type_qtn')
 
     @classmethod
-    def make_number(cls, name, code):
-        return cls.env['doc.number'].create({
-            'origin': 'import', 'name': name, 'type_id': cls.type_qtn.id, 'company_id': code.company_id.id,
-            'unique_code_id': code.id, 'beneficiary': 'DMS test', 'purpose': 'DMS test',
-        })
+    def tearDownClass(cls):
+        cls._graph_patch.stop()
+        super().tearDownClass()
+
+    def setUp(self):
+        super().setUp()
+        self.graph.reset_calls()
+        self.addCleanup(self.graph.restore, self.graph.snapshot())
+
+    @classmethod
+    def make_number(cls, name, code, doc_type=None, division=None, requested_by=None, **values):
+        vals = {
+            'origin': 'import', 'name': name, 'type_id': (doc_type or cls.type_qtn).id,
+            'company_id': code.company_id.id, 'unique_code_id': code.id,
+            'division_id': division.id if division else False,
+            'requested_by_id': requested_by.id if requested_by else False,
+            'beneficiary': 'DMS test', 'purpose': 'DMS test',
+        }
+        vals.update(values)
+        return cls.env['doc.number'].create(vals)
 
     @classmethod
     def make_file(cls, name='plan.pdf', project=None, **values):
@@ -222,11 +265,12 @@ class TestGrantsAndUsers(DmsCommon):
                 Grant.flush()
 
     def test_email_used_for_access(self):
-        self.assertFalse(self.member._dms_email())  # test logins have no @
-        self.member.sudo().dms_m365_email = ' Member@Example.Test '
-        self.assertEqual(self.member._dms_email(), 'member@example.test')
-        self.outsider.sudo().login = 'outsider@example.test'
-        self.assertEqual(self.outsider._dms_email(), 'outsider@example.test')
+        user = new_test_user(self.env, login='dms_no_address', groups='base.group_user')
+        self.assertFalse(user._dms_email())  # a login without @ and no sign-in address
+        user.sudo().dms_m365_email = ' Someone@Example.Test '
+        self.assertEqual(user._dms_email(), 'someone@example.test')
+        user.sudo().write({'dms_m365_email': False, 'login': 'login@example.test'})
+        self.assertEqual(user._dms_email(), 'login@example.test')
 
     def test_upload_folder_id_set_by_the_system(self):
         admin = self.env.ref('base.user_admin')

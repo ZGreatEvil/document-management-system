@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="dms_file_add_wizard_view_form" model="ir.ui.view">
+        <field name="name">dms.file.add.wizard.form</field>
+        <field name="model">dms.file.add.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Add File">
+                <field name="project_id" invisible="1"/>
+                <field name="unique_code_id" invisible="1"/>
+                <field name="current_file_id" invisible="1"/>
+                <group>
+                    <field name="file" filename="filename" required="1"/>
+                    <field name="filename" invisible="1"/>
+                    <field name="number_id" options="{'no_create': True, 'no_open': True}"/>
+                    <field name="final_name" attrs="{'invisible': [('final_name', '=', False)]}"/>
+                </group>
+                <div class="alert alert-warning" role="alert" attrs="{'invisible': [('current_file_id', '=', False)]}">
+                    This number already has a file: <strong><field name="current_file_name" class="oe_inline"/></strong>.
+                    <div class="mt8">
+                        <field name="replace_current" class="oe_inline"/>
+                        <label for="replace_current"/>
+                    </div>
+                </div>
+                <p class="text-muted">
+                    The file goes into the project's SharePoint folder and only the project's members can open it.
+                    Files larger than the upload limit (128 MB unless your administrator changed it) cannot be added here.
+                </p>
+                <footer>
+                    <button name="action_add" type="object" string="Add file" class="btn-primary"/>
+                    <button special="cancel" string="Cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
+import mimetypes
+
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
+from odoo.tools.mimetypes import guess_mimetype
+
+from . import sharepoint
+from .graph_client import DmsGraphError, GraphClient, get_settings
 
 MANAGER_GROUP = 'document_management_system.group_dms_manager'
 
@@ -95,6 +101,82 @@ class DmsFile(models.Model):
 
     def copy(self, default=None):
         raise UserError(_('Project files cannot be duplicated.'))
+
+    # ------------------------------------------------------------------
+    # sharepoint
+    # ------------------------------------------------------------------
+
+    @api.model
+    def _dms_client(self):
+        """every graph call of the module starts here (tests replace it)"""
+        return GraphClient.from_env(self.env)
+
+    @api.model
+    def _dms_error_message(self, error):
+        if error.code == 'notConfigured':
+            return _('SharePoint is not set up yet: the connection settings or the client secret are missing.')
+        if error.status == 0:
+            return _('SharePoint could not be reached. Try again in a moment.')
+        if error.status in (401, 403):
+            return _('SharePoint refused access (%s). An administrator checks the app\'s access to the site.') % error.code
+        return _('SharePoint answered with an error (%s %s). Try again, or ask an administrator.') % (
+            error.status, error.code)
+
+    @api.model
+    def _dms_add(self, project, data, original_filename, number=None, supersede=None):
+        """7.2: uploads one file into the project folder, shares it with the members and records it.
+        when sharepoint fails nothing is saved in odoo, and a file already uploaded is removed again"""
+        project = project.sudo()
+        folder_id = project._dms_ensure_folder()
+        drive_id = get_settings(self.env)['drive_id']
+        if number:
+            name, conflict = sharepoint.number_filename(number.display_number, original_filename), 'fail'
+        else:
+            name, conflict = sharepoint.clean_filename(original_filename), 'rename'
+        name = sharepoint.fit_length(name, project._dms_folder_path())
+        mimetype = mimetypes.guess_type(original_filename or '')[0] or guess_mimetype(data)
+        emails = {user: user._dms_email() for user in project.dms_member_user_ids}
+        client = item = None
+        try:
+            client = self._dms_client()
+            item = sharepoint.upload_file(client, drive_id, folder_id, name, data, conflict, mimetype)
+            permission_id, share_url = sharepoint.share_with(client, drive_id, item['id'], sorted(set(emails.values())))
+            if supersede:
+                supersede.sudo().write({'state': 'superseded'})
+            file = self.sudo().create({
+                'name': item.get('name') or name,
+                'project_id': project.id,
+                'number_id': number.id if number else False,
+                'original_filename': original_filename,
+                'source': 'upload',
+                'drive_id': drive_id,
+                'item_id': item['id'],
+                'link_permission_id': permission_id,
+                'share_url': share_url,
+                'size': item.get('size') or len(data),
+                'mimetype': mimetype,
+                'uploaded_by_id': self.env.uid,
+            })
+            self.env['dms.file.grant'].sudo().create([
+                {'file_id': file.id, 'user_id': user.id, 'email': email} for user, email in emails.items()])
+        except DmsGraphError as e:
+            if item:
+                sharepoint.delete_item(client, drive_id, item['id'])
+            if number and e.status == 409:
+                raise UserError(_('%s is already in the project folder. If this is a new version of the document, '
+                                  'add a revision to the number first.') % name)
+            raise UserError(self._dms_error_message(e))
+        except Exception:
+            if item:
+                sharepoint.delete_item(client, drive_id, item['id'])
+            raise
+        return file
+
+    def action_open(self):
+        self.ensure_one()
+        if self.state == 'removed' or not self.share_url:
+            raise UserError(_('This file has no link any more.'))
+        return {'type': 'ir.actions.act_url', 'url': self.share_url, 'target': 'new'}
 
 
 class DmsFileGrant(models.Model):

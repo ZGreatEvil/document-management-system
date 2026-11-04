@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.document_management_system</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="60"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('settings')]" position="inside">
+                <div class="app_settings_block" data-string="Document Management" string="Document Management"
+                     data-key="document_management_system" groups="document_management_system.group_dms_manager">
+                    <h2>Microsoft 365 connection</h2>
+                    <div class="row mt16 o_settings_container" id="dms_connection">
+                        <div class="col-12 col-lg-6 o_setting_box" id="dms_app">
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">App registration</span>
+                                <div class="text-muted">
+                                    The Entra ID app with the Sites.Selected permission. Its client secret is
+                                    read from odoo.conf (dms_graph_client_secret), never stored here.
+                                </div>
+                                <div class="content-group mt16">
+                                    <div class="row">
+                                        <label for="dms_tenant_id" class="col-lg-4 o_light_label"/>
+                                        <field name="dms_tenant_id"/>
+                                    </div>
+                                    <div class="row">
+                                        <label for="dms_client_id" class="col-lg-4 o_light_label"/>
+                                        <field name="dms_client_id"/>
+                                    </div>
+                                    <div class="row">
+                                        <label for="dms_secret_set" class="col-lg-4 o_light_label"/>
+                                        <field name="dms_secret_set"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box" id="dms_site">
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">SharePoint site</span>
+                                <div class="text-muted">
+                                    The site, its document library, and the two top folders in that library.
+                                </div>
+                                <div class="content-group mt16">
+                                    <div class="row">
+                                        <label for="dms_site_id" class="col-lg-4 o_light_label"/>
+                                        <field name="dms_site_id"/>
+                                    </div>
+                                    <div class="row">
+                                        <label for="dms_drive_id" class="col-lg-4 o_light_label"/>
+                                        <field name="dms_drive_id"/>
+                                    </div>
+                                    <div class="row">
+                                        <label for="dms_projects_folder_id" class="col-lg-4 o_light_label"/>
+                                        <field name="dms_projects_folder_id"/>
+                                    </div>
+                                    <div class="row">
+                                        <label for="dms_intake_folder_id" class="col-lg-4 o_light_label"/>
+                                        <field name="dms_intake_folder_id"/>
+                                    </div>
+                                </div>
+                                <div class="mt8">
+                                    <button name="action_dms_test_connection" type="object" string="Test connection"
+                                            icon="fa-plug" class="btn-link"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

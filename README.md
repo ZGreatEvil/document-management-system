@@ -4,7 +4,25 @@ Odoo 14 Community module (in progress) that stores project files in SharePoint: 
 
 ## Status
 
-Phase 0, proof of concept. The Odoo module itself is not written yet.
+- Phase 0, Microsoft Graph proof of concept: written, waiting for a run against the test tenant.
+- Phase 1, module skeleton (`document_management_system/`, version 14.0.1.0.0): data model, security groups and rules, settings screen with a connection test, and the Graph client. Uploading files, links and member sync come in later phases.
+
+## Module tests
+
+The tests mock Microsoft Graph, so they never call Microsoft and pass on any server. They are tagged `dms`.
+
+```
+odoo-bin -c <conf> -d <new database> -i document_management_system --test-enable --test-tags /document_management_system --stop-after-init
+```
+
+The module depends on `project`, `document_library` and `document_numbering`, which must be in the addons path.
+
+The client secret goes in `odoo.conf` on the server, never in the database or this repository:
+
+```
+[options]
+dms_graph_client_secret = <secret>
+```
 
 ## Phase 0: Microsoft Graph proof of concept
 

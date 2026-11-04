@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="module_category_dms" model="ir.module.category">
+        <field name="name">Document Management System</field>
+        <field name="sequence">62</field>
+    </record>
+
+    <!-- every internal user; which files they see depends on the projects they are a member of -->
+    <record id="group_dms_user" model="res.groups">
+        <field name="name">User</field>
+        <field name="category_id" ref="module_category_dms"/>
+    </record>
+
+    <record id="base.group_user" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('group_dms_user'))]"/>
+    </record>
+
+    <record id="group_dms_manager" model="res.groups">
+        <field name="name">Administrator</field>
+        <field name="category_id" ref="module_category_dms"/>
+        <field name="implied_ids" eval="[(4, ref('group_dms_user'))]"/>
+        <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+    </record>
+
+    <record id="dms_file_company_rule" model="ir.rule">
+        <field name="name">Project files: allowed companies</field>
+        <field name="model_id" ref="model_dms_file"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', user.company_ids.ids)]</field>
+    </record>
+
+    <!-- members of the file's project only; administrators see all (rules of different groups are OR-ed) -->
+    <record id="dms_file_member_rule" model="ir.rule">
+        <field name="name">Project files: my projects</field>
+        <field name="model_id" ref="model_dms_file"/>
+        <field name="groups" eval="[(4, ref('group_dms_user'))]"/>
+        <field name="domain_force">[('project_id.dms_member_user_ids', 'in', [user.id])]</field>
+    </record>
+
+    <record id="dms_file_manager_rule" model="ir.rule">
+        <field name="name">Project files: all (administrators)</field>
+        <field name="model_id" ref="model_dms_file"/>
+        <field name="groups" eval="[(4, ref('group_dms_manager'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+</odoo>

@@ -1,0 +1,17 @@
+# archives
+*.zip
+*.rar
+
+# secrets and local config
+.env
+*.env
+*.conf
+odoo.conf
+
+# python
+__pycache__/
+*.py[cod]
+
+# editors
+.vscode/
+.idea/

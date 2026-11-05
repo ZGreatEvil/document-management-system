@@ -1,0 +1,88 @@
+// colours come from odoo's scss variables only, so a backend theme recolours this
+
+.o_dms_help {
+    overflow: auto;
+    background-color: $o-view-background-color;
+    height: 100%;
+}
+
+.o_dms_help_page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: $o-horizontal-padding * 2 $o-horizontal-padding;
+    color: $o-main-text-color;
+    line-height: 1.6;
+    overflow-wrap: break-word;
+
+    h1 {
+        font-size: 1.75rem;
+        margin-bottom: map-get($spacers, 2);
+    }
+
+    h2 {
+        font-size: 1.3rem;
+        margin: map-get($spacers, 4) 0 map-get($spacers, 2);
+        padding-bottom: map-get($spacers, 1);
+        border-bottom: 1px solid $border-color;
+    }
+
+    h3 {
+        font-size: 1.1rem;
+        margin-bottom: map-get($spacers, 1);
+    }
+
+    code {
+        white-space: normal;
+    }
+
+    dt {
+        margin-top: map-get($spacers, 2);
+    }
+
+    dd {
+        margin-left: map-get($spacers, 3);
+    }
+}
+
+.o_dms_help_lead {
+    font-size: 1.1rem;
+    color: $text-muted;
+}
+
+.o_dms_help_muted {
+    color: $text-muted;
+    margin-bottom: map-get($spacers, 1);
+}
+
+.o_dms_help_toc {
+    background-color: $o-gray-100;
+    border: 1px solid $border-color;
+    border-radius: $border-radius;
+    padding: map-get($spacers, 2) map-get($spacers, 3);
+
+    ul {
+        margin: 0;
+        padding-left: map-get($spacers, 3);
+    }
+
+    a:focus {
+        outline: 2px solid $o-brand-primary;
+        outline-offset: 2px;
+    }
+}
+
+.o_dms_help_release {
+    margin-bottom: map-get($spacers, 3);
+}
+
+// the same gap between icon and text on every button of the module
+.o_dms_actions .btn > .fa,
+.o_dms_wizard_hint .btn > .fa {
+    margin-right: map-get($spacers, 1);
+}
+
+// the unique code on the project card
+.o_dms_code_badge {
+    margin-left: map-get($spacers, 1);
+    vertical-align: middle;
+}

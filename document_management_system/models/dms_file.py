@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import mimetypes
+import os
 
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
@@ -36,7 +37,7 @@ class DmsFile(models.Model):
     number_id = fields.Many2one(
         'doc.number', string='Document Number', index=True, ondelete='restrict', readonly=True,
         domain="[('unique_code_id', '=', unique_code_id), ('state', '=', 'active')]")
-    original_filename = fields.Char(readonly=True)
+    original_filename = fields.Char(string='Original File Name', readonly=True)
     source = fields.Selection([('upload', 'Uploaded in Odoo'), ('link', 'Moved from an upload folder')],
                               required=True, readonly=True)
     drive_id = fields.Char(string='Drive ID', readonly=True, groups=MANAGER_GROUP)
@@ -46,7 +47,7 @@ class DmsFile(models.Model):
                             help='The specific-people link. SharePoint refuses anyone who is not a project member.')
     # bytes; a float column so files above 2 GiB (moved from an upload folder) still fit
     size = fields.Float(digits=(20, 0), readonly=True)
-    mimetype = fields.Char(readonly=True)
+    mimetype = fields.Char(string='File Type', readonly=True)
     uploaded_by_id = fields.Many2one('res.users', string='Uploaded By', readonly=True,
                                      default=lambda self: self.env.user)
     uploaded_on = fields.Datetime(string='Uploaded On', readonly=True, default=fields.Datetime.now)
@@ -231,6 +232,9 @@ class DmsFile(models.Model):
         try:
             moved = sharepoint.move_item(client, drive_id, item['id'], folder_id, name, rename=not number)
             sharepoint.remove_links(client, drive_id, item['id'])
+            uploader_email = self.env.user._dms_email()
+            if uploader_email:
+                sharepoint.remove_direct_access(client, drive_id, item['id'], uploader_email)
             permission_id, share_url = sharepoint.share_with(client, drive_id, item['id'], sorted(set(emails.values())))
             if supersede:
                 supersede.sudo().write({'state': 'superseded'})
@@ -282,6 +286,94 @@ class DmsFile(models.Model):
         if self.state == 'removed' or not self.share_url:
             raise UserError(_('This file has no link any more.'))
         return {'type': 'ir.actions.act_url', 'url': self.share_url, 'target': 'new'}
+
+    # ------------------------------------------------------------------
+    # access upkeep (7.4, 7.6)
+    # ------------------------------------------------------------------
+
+    def _dms_sync_grants(self, client, wanted):
+        """one file: people who left are revoked, missing members are granted. wanted is {user id: email}.
+        the grant rows follow what sharepoint was told"""
+        self.ensure_one()
+        file = self.sudo()
+        Grant = self.env['dms.file.grant'].sudo()
+        current = {grant.user_id.id: grant for grant in file.grant_ids}
+        add = {uid: email for uid, email in wanted.items()
+               if email and (uid not in current or current[uid].email != email)}
+        remove = Grant.browse([grant.id for uid, grant in current.items()
+                               if uid not in wanted or wanted[uid] != grant.email])
+        if remove:
+            client.post('/drives/%s/items/%s/permissions/%s/revokeGrants'
+                        % (file.drive_id, file.item_id, file.link_permission_id), expect=(200,),
+                        json={'grantees': [{'email': email} for email in sorted(set(remove.mapped('email')))]})
+            remove.unlink()
+        if add:
+            result = client.post('/shares/%s/permission/grant' % sharepoint.encode_share_url(file.share_url),
+                                 expect=(200,), json={'recipients': [{'email': e} for e in sorted(set(add.values()))],
+                                                      'roles': ['read']})
+            updated = next((p for p in result.get('value') or [] if (p.get('link') or {}).get('scope')), None)
+            if updated and updated['link'].get('webUrl') and updated['link']['webUrl'] != file.share_url:
+                file.write({'share_url': updated['link']['webUrl']})
+            Grant.create([{'file_id': file.id, 'user_id': uid, 'email': email} for uid, email in add.items()])
+        return bool(add or remove)
+
+    def _dms_relink(self, client, wanted):
+        """odoo's link on the file has gone: a new one is made and given to the members"""
+        self.ensure_one()
+        file = self.sudo()
+        permission_id, share_url = sharepoint.share_with(client, file.drive_id, file.item_id,
+                                                         sorted(set(e for e in wanted.values() if e)))
+        file.grant_ids.unlink()
+        file.write({'link_permission_id': permission_id, 'share_url': share_url, 'last_error': False})
+        self.env['dms.file.grant'].sudo().create([
+            {'file_id': file.id, 'user_id': uid, 'email': email} for uid, email in wanted.items() if email])
+
+    def _dms_delete_for_cancelled_number(self, client):
+        """the file's number was cancelled: the file is deleted in sharepoint (it goes to the site's recycle bin);
+        odoo keeps the record, marked removed, as history"""
+        self.ensure_one()
+        file = self.sudo()
+        try:
+            client.delete('/drives/%s/items/%s' % (file.drive_id, file.item_id))
+        except DmsGraphError as e:
+            if e.status != 404:
+                raise
+        file.grant_ids.unlink()
+        file.write({'state': 'removed', 'last_error': False})
+        file.message_post(body=_('Deleted from SharePoint because %s was cancelled. It can be restored from the '
+                                 'site\'s recycle bin by a site owner.') % file.number_id.display_number)
+
+    def action_dms_remove(self):
+        """7.6, DMS managers: the file's links are deleted so nobody can open it through odoo any more.
+        the file itself stays in sharepoint (site owners can delete it by hand)"""
+        if not self.env.user.has_group(MANAGER_GROUP):
+            raise AccessError(_('Only Document Management administrators can remove files.'))
+        files = self.sudo().filtered(lambda f: f.state != 'removed')
+        if not files:
+            return True
+        try:
+            client = self._dms_client()
+            for file in files:
+                name = file.name
+                try:
+                    sharepoint.remove_links(client, file.drive_id, file.item_id)
+                    # renamed so its name is free again, e.g. for the right file of the same number
+                    stem, ext = os.path.splitext(file.name)
+                    moved = sharepoint.move_item(
+                        client, file.drive_id, file.item_id, file.project_id._dms_ensure_folder(),
+                        '%s (removed %s)%s' % (stem, fields.Date.context_today(self), ext), rename=True)
+                    name = moved.get('name') or name
+                except DmsGraphError as e:
+                    # a file already deleted in sharepoint has nothing left to remove
+                    if e.status != 404:
+                        raise
+                file.grant_ids.unlink()
+                file.write({'state': 'removed', 'name': name, 'last_error': False})
+                file.message_post(body=_('Removed by %s: its link was deleted, so nobody can open it from Odoo. '
+                                         'The file is still in SharePoint.') % self.env.user.name)
+        except DmsGraphError as e:
+            raise UserError(_('The file could not be removed. %s') % self._dms_error_message(e))
+        return True
 
 
 class DmsFileGrant(models.Model):

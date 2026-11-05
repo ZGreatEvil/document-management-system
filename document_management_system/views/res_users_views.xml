@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_users_form_inherit_dms" model="ir.ui.view">
+        <field name="name">res.users.form.inherit.document_management_system</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='access_rights']" position="after">
+                <page name="dms" string="Document Management" groups="document_management_system.group_dms_manager">
+                    <group>
+                        <group>
+                            <field name="dms_m365_email" placeholder="Empty: the login is used"/>
+                            <field name="dms_intake_item_id"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -47,8 +47,8 @@ class DmsFileAddWizard(models.TransientModel):
         for wizard in self:
             if wizard.mode == 'link':
                 # the file's own name is only known once the link is resolved
-                wizard.final_name = wizard.number_id and _('%s + the file\'s extension') % sharepoint.number_filename(
-                    wizard.number_id.display_number, '')
+                wizard.final_name = _('%s + the file\'s extension') % sharepoint.number_filename(
+                    wizard.number_id.display_number, '') if wizard.number_id else False
             elif not wizard.filename:
                 wizard.final_name = False
             elif wizard.number_id:

@@ -18,7 +18,7 @@
                     <field name="number_id" options="{'no_create': True, 'no_open': True}"/>
                     <field name="final_name" attrs="{'invisible': [('final_name', '=', False)]}"/>
                 </group>
-                <div class="text-muted mb16" attrs="{'invisible': [('mode', '!=', 'link')]}">
+                <div class="text-muted mb16 o_dms_wizard_hint" attrs="{'invisible': [('mode', '!=', 'link')]}">
                     For large files: put the file in your own upload folder in SharePoint, use "Copy link" on it and
                     paste the link here. The file is then moved into the project folder.
                     <button name="action_upload_folder" type="object" string="My upload folder" icon="fa-folder-open-o"

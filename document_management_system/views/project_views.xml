@@ -30,11 +30,13 @@
                         Files can be added once a Document Management administrator links this project to its
                         unique code.
                     </div>
-                    <div class="mb16" attrs="{'invisible': [('dms_unique_code_id', '=', False)]}">
+                    <div class="mb16 o_dms_actions" attrs="{'invisible': [('dms_unique_code_id', '=', False)]}">
                         <button name="action_dms_add_file" type="object" string="Add file" icon="fa-upload"
                                 class="btn-primary"/>
                         <button name="action_dms_upload_folder" type="object" string="My upload folder"
                                 icon="fa-folder-open-o" class="btn-secondary ml8"/>
+                        <button name="action_dms_sync_now" type="object" string="Sync now" icon="fa-refresh"
+                                class="btn-secondary ml8" groups="document_management_system.group_dms_manager"/>
                     </div>
                     <field name="dms_file_ids" readonly="1" attrs="{'invisible': [('dms_unique_code_id', '=', False)]}">
                         <tree decoration-muted="state in ('superseded', 'removed')" decoration-danger="state == 'error'">
@@ -51,10 +53,41 @@
                     </field>
                     <group string="Who can open the files" attrs="{'invisible': [('dms_unique_code_id', '=', False)]}">
                         <field name="dms_member_user_ids" widget="many2many_tags" readonly="1"/>
-                        <field name="dms_extra_member_ids" widget="many2many_tags" options="{'no_create': True}"
-                               attrs="{'readonly': [('dms_can_manage', '=', False)]}"/>
+                        <div class="text-muted" colspan="2">
+                            Everyone who can open this project in Odoo. To change it, change who has access to the
+                            project (Settings tab, Visibility and invited users).
+                        </div>
                     </group>
                 </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- the unique code on the card, and a Files box next to Odoo's own Tasks box (outside the clickable card) -->
+    <record id="view_project_kanban_inherit_dms" model="ir.ui.view">
+        <field name="name">project.project.kanban.inherit.document_management_system</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.view_project_kanban"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="dms_unique_code_id"/>
+                <field name="dms_unique_code_name"/>
+                <field name="dms_file_count"/>
+            </xpath>
+            <xpath expr="//div[hasclass('o_primary')]" position="inside">
+                <span t-if="record.dms_unique_code_id.raw_value" class="badge badge-pill badge-info o_dms_code_badge"
+                      title="Unique code">
+                    <t t-esc="record.dms_unique_code_name.value"/>
+                </span>
+            </xpath>
+            <xpath expr="//div[hasclass('o_project_kanban_boxes')]" position="inside">
+                <a t-if="record.dms_unique_code_id.raw_value" class="o_project_kanban_box" name="action_dms_open_files"
+                   type="object">
+                    <div>
+                        <span class="o_value"><t t-esc="record.dms_file_count.value"/></span>
+                        <span class="o_label">Files</span>
+                    </div>
+                </a>
             </xpath>
         </field>
     </record>

@@ -1,18 +1,24 @@
 # -*- coding: utf-8 -*-
+import logging
+import threading
+
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
+from odoo.tools import config
 
 from . import sharepoint
 from .graph_client import DmsGraphError, get_settings
+
+_logger = logging.getLogger(__name__)
 
 MANAGER_GROUP = 'document_management_system.group_dms_manager'
 
 # set only by the module's own methods, which run with sudo after their own checks
 PROTECTED_FIELDS = {'dms_folder_item_id', 'dms_member_user_ids', 'dms_sync_state', 'dms_last_sync', 'dms_last_error'}
-# DMS managers only (who links a code is still an open decision; managers for now)
-MANAGER_FIELDS = {'dms_unique_code_id', 'dms_extra_member_ids'}
-# project fields the member rule reads
-MEMBER_SOURCES = {'user_id', 'privacy_visibility', 'allowed_internal_user_ids', 'dms_extra_member_ids'}
+# DMS managers only
+MANAGER_FIELDS = {'dms_unique_code_id'}
+# project fields odoo's project access rules read
+MEMBER_SOURCES = {'privacy_visibility', 'allowed_internal_user_ids', 'company_id'}
 
 
 class Project(models.Model):
@@ -21,6 +27,8 @@ class Project(models.Model):
     dms_unique_code_id = fields.Many2one(
         'doc.number.unique.code', string='Unique Code', copy=False, index=True, ondelete='restrict', tracking=True,
         help='The project code whose files this project holds. Its SharePoint folder is Projects/<year>/<code>/.')
+    # the code alone (its display name adds customer and project type), for the kanban badge
+    dms_unique_code_name = fields.Char(related='dms_unique_code_id.name', string='Unique Code Name')
     dms_folder_item_id = fields.Char(string='SharePoint Folder ID', copy=False, readonly=True, groups=MANAGER_GROUP)
     dms_file_ids = fields.One2many('dms.file', 'project_id', string='Files')
     dms_file_count = fields.Integer(compute='_compute_dms_file_count', string='File Count')
@@ -28,13 +36,10 @@ class Project(models.Model):
     dms_member_user_ids = fields.Many2many(
         'res.users', 'dms_project_member_rel', 'project_id', 'user_id', string='Members (files)',
         copy=False, readonly=True)
-    dms_extra_member_ids = fields.Many2many(
-        'res.users', 'dms_project_extra_member_rel', 'project_id', 'user_id', string='Extra Members (files)',
-        copy=False, domain=[('share', '=', False)])
     dms_sync_state = fields.Selection(
         [('ok', 'Up to date'), ('pending', 'Pending'), ('error', 'Error')],
         string='File Access', default='ok', copy=False, readonly=True)
-    dms_last_sync = fields.Datetime(string='Last File Access Sync', copy=False, readonly=True)
+    dms_last_sync = fields.Datetime(string='Last Sync', copy=False, readonly=True)
     dms_last_error = fields.Text(string='Last Sync Error', copy=False, readonly=True, groups=MANAGER_GROUP)
     # lets the form make manager-only fields read only for everyone else (the server checks again)
     dms_can_manage = fields.Boolean(compute='_compute_dms_can_manage')
@@ -78,10 +83,15 @@ class Project(models.Model):
         if PROTECTED_FIELDS & keys:
             raise AccessError(_('Project file access is kept up to date by the system and cannot be changed by hand.'))
         if MANAGER_FIELDS & keys and not self.env.user.has_group(MANAGER_GROUP):
-            raise AccessError(_('Only Document Management administrators can link a unique code '
-                                'or add extra file members.'))
+            raise AccessError(_('Only Document Management administrators can link a unique code.'))
 
     def _dms_check_code_change(self, code_id):
+        if code_id:
+            # checked before sharepoint is touched; the unique index stays as the last guard
+            taken = self.sudo().with_context(active_test=False).search(
+                [('dms_unique_code_id', '=', code_id), ('id', 'not in', self.ids)], limit=1)
+            if taken:
+                raise UserError(_('This unique code is already linked to project %s.') % taken.name)
         for project in self.sudo():
             if project.dms_unique_code_id.id != (code_id or False) and project.dms_file_ids:
                 raise UserError(_('Project %s already has files, so its unique code can no longer change.')
@@ -91,6 +101,8 @@ class Project(models.Model):
     def create(self, vals_list):
         for vals in vals_list:
             self._dms_check_values(vals, creating=True)
+            if vals.get('dms_unique_code_id'):
+                self.browse()._dms_check_code_change(vals['dms_unique_code_id'])
         projects = super().create(vals_list)
         projects.filtered('dms_unique_code_id')._dms_link_code()
         return projects
@@ -152,32 +164,27 @@ class Project(models.Model):
         return folder_id
 
     def _dms_compute_member_users(self):
-        """who may open this project's files. the one place the member rule lives:
-        - the project manager
-        - the invited internal users, when the project is visible to invited users only
-        - the team and project manager of every active work order under the unique code
-        - everyone who requested an active number under the unique code
-        - the extra members set by DMS managers
-        minus inactive users, portal users and users without a microsoft 365 address"""
+        """who may open this project's files. the one place the member rule lives (agreed 2026-11-05):
+        exactly the active internal users who can open the project in odoo, as odoo's own project access rules
+        decide (invited users of an invited-only project, every employee otherwise, project administrators always,
+        each within their companies), minus users without a microsoft 365 address"""
         self.ensure_one()
-        project = self.sudo()
-        users = project.user_id | project.dms_extra_member_ids
-        if project.privacy_visibility == 'followers':
-            users |= project.allowed_internal_user_ids
-        if project.dms_unique_code_id:
-            numbers = self.env['doc.number'].sudo().search([
-                ('unique_code_id', '=', project.dms_unique_code_id.id), ('state', '=', 'active')])
-            work_orders = numbers.filtered(lambda n: n.project_role == 'work_order')
-            users |= (work_orders.mapped('team_ids') | work_orders.mapped('pm_id')).mapped('user_id')
-            users |= numbers.mapped('requested_by_id')
-        return users.filtered(lambda u: u.active and not u.share and u._dms_email())
+        members = self.env['res.users']
+        for user in self.env['res.users'].sudo().search([('share', '=', False)]):
+            if not user._dms_email():
+                continue
+            project = self.with_user(user).with_context(allowed_company_ids=user.company_ids.ids)
+            if project.check_access_rights('read', raise_exception=False) and project._filter_access_rules('read'):
+                members |= user
+        return members
 
     def _dms_update_members(self):
         """stores the members; when they changed and files are shared, the project waits for the member sync"""
         changed = False
         for project in self.sudo():
             users = project._dms_compute_member_users()
-            if users == project.dms_member_user_ids:
+            # archived users still count as stored: they are exactly the ones whose access must go
+            if users == project.with_context(active_test=False).dms_member_user_ids:
                 continue
             vals = {'dms_member_user_ids': [(6, 0, users.ids)]}
             if project.dms_file_ids.filtered(lambda f: f.state == 'shared'):
@@ -189,8 +196,105 @@ class Project(models.Model):
             self.env['ir.rule'].clear_caches()
 
     # ------------------------------------------------------------------
+    # member sync (7.4)
+    # ------------------------------------------------------------------
+
+    def _dms_sync_files(self):
+        """brings sharepoint in line with odoo: files of cancelled numbers are deleted (agreed 2026-11-05), and access
+        to every shared file follows the members. superseded files keep their access (history), removed ones have
+        no link. returns True when everything went through"""
+        self.ensure_one()
+        project = self.sudo()
+        File = self.env['dms.file']
+        project._dms_update_members()
+        wanted = {user.id: user._dms_email() for user in project.dms_member_user_ids}
+        try:
+            client = File._dms_client()
+            for file in project._dms_cancelled_number_files():
+                file._dms_delete_for_cancelled_number(client)
+            for file in project.dms_file_ids.filtered(lambda f: f.state == 'shared'):
+                file._dms_sync_grants(client, wanted)
+        except DmsGraphError as e:
+            project.write({'dms_sync_state': 'error', 'dms_last_error': File._dms_error_message(e),
+                           'dms_last_sync': fields.Datetime.now()})
+            return False
+        project.write({'dms_sync_state': 'ok', 'dms_last_error': False, 'dms_last_sync': fields.Datetime.now()})
+        return True
+
+    def _dms_cancelled_number_files(self):
+        return self.sudo().dms_file_ids.filtered(lambda f: f.state != 'removed' and f.number_id.state == 'cancelled')
+
+    @api.model
+    def _dms_commit(self):
+        """crons keep each project's progress; tests run in one transaction that must not be committed"""
+        if not (getattr(threading.current_thread(), 'testing', False) or config['test_enable']):
+            self.env.cr.commit()
+
+    @api.model
+    def _dms_cron_sync(self, limit=100):
+        """every 5 minutes: projects waiting for the member sync, or whose last sync failed"""
+        projects = self.sudo().search([('dms_unique_code_id', '!=', False),
+                                       ('dms_sync_state', 'in', ('pending', 'error'))], limit=limit, order='id')
+        for project in projects:
+            project._dms_sync_files()
+            self._dms_commit()
+
+    @api.model
+    def _dms_cron_drift(self):
+        """nightly: compares every shared file in sharepoint with odoo. links odoo did not make are deleted, a lost
+        odoo link is made again, a file gone from sharepoint is marked as an error; each finding goes in the
+        project's chatter"""
+        File = self.env['dms.file'].sudo()
+        try:
+            client = File._dms_client()
+        except DmsGraphError as e:
+            _logger.warning('dms drift check skipped: %s', e)
+            return
+        for project in self.sudo().search([('dms_unique_code_id', '!=', False)], order='id'):
+            notes = []
+            wanted = {user.id: user._dms_email() for user in project.dms_member_user_ids}
+            for file in project.dms_file_ids.filtered(lambda f: f.state == 'shared'):
+                try:
+                    perms = sharepoint.list_permissions(client, file.drive_id, file.item_id)
+                    foreign = [p for p in perms if p.get('link') and p['link'].get('scope') != 'existingAccess'
+                               and p['id'] != file.link_permission_id]
+                    for perm in foreign:
+                        client.delete('/drives/%s/items/%s/permissions/%s' % (file.drive_id, file.item_id, perm['id']))
+                    if foreign:
+                        notes.append(_('%(file)s: %(count)s link(s) not made by Odoo were deleted.',
+                                       file=file.name, count=len(foreign)))
+                    if not any(p['id'] == file.link_permission_id for p in perms):
+                        file._dms_relink(client, wanted)
+                        notes.append(_('%s: its Odoo link was missing and has been made again.') % file.name)
+                except DmsGraphError as e:
+                    if e.status != 404:
+                        _logger.warning('dms drift check of a file failed: HTTP %s %s', e.status, e.code)
+                        continue
+                    file.write({'state': 'error', 'last_error': _('The file is no longer in SharePoint.')})
+                    notes.append(_('%s is no longer in SharePoint.') % file.name)
+            if notes:
+                project.message_post(body='<br/>'.join([_('File access check:')] + notes))
+            self._dms_commit()
+
+    # ------------------------------------------------------------------
     # actions
     # ------------------------------------------------------------------
+
+    def action_dms_sync_now(self):
+        self.ensure_one()
+        if not self.env.user.has_group(MANAGER_GROUP):
+            raise AccessError(_('Only Document Management administrators can start the file access sync.'))
+        if not self.dms_unique_code_id:
+            raise UserError(_('This project has no unique code, so it has no files to sync.'))
+        if not self._dms_sync_files():
+            raise UserError(_('The sync did not finish: %s It is tried again automatically every 5 minutes.')
+                            % self.sudo().dms_last_error)
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {'title': _('File access is up to date'), 'type': 'success', 'sticky': False,
+                       'message': _('Every shared file of %s now matches the member list.') % self.name},
+        }
 
     def _dms_check_can_add(self):
         self.ensure_one()

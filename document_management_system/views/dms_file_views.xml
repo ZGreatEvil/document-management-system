@@ -28,6 +28,10 @@
                 <header>
                     <button name="action_open" type="object" string="Open" class="btn-primary" icon="fa-external-link"
                             attrs="{'invisible': ['|', ('state', '=', 'removed'), ('share_url', '=', False)]}"/>
+                    <button name="action_dms_remove" type="object" string="Remove" icon="fa-ban"
+                            groups="document_management_system.group_dms_manager"
+                            attrs="{'invisible': [('state', '=', 'removed')]}"
+                            confirm="Remove this file? Its link is deleted, so nobody can open it from Odoo any more. The file itself stays in SharePoint."/>
                     <field name="state" widget="statusbar" statusbar_visible="shared,superseded"/>
                 </header>
                 <sheet>

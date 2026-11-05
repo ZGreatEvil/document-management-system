@@ -10,14 +10,14 @@ class ResConfigSettings(models.TransientModel):
     _inherit = 'res.config.settings'
 
     dms_tenant_id = fields.Char(string='Tenant ID', config_parameter=PARAM_PREFIX + 'tenant_id')
-    dms_client_id = fields.Char(string='Application (Client) ID', config_parameter=PARAM_PREFIX + 'client_id')
+    dms_client_id = fields.Char(string='Client ID', config_parameter=PARAM_PREFIX + 'client_id')
     dms_site_id = fields.Char(string='Site ID', config_parameter=PARAM_PREFIX + 'site_id')
-    dms_drive_id = fields.Char(string='Document Library (Drive) ID', config_parameter=PARAM_PREFIX + 'drive_id')
-    dms_projects_folder_id = fields.Char(string='"Projects" Folder ID',
+    dms_drive_id = fields.Char(string='Library ID', config_parameter=PARAM_PREFIX + 'drive_id')
+    dms_projects_folder_id = fields.Char(string='Projects Folder ID',
                                          config_parameter=PARAM_PREFIX + 'projects_folder_id')
-    dms_intake_folder_id = fields.Char(string='"Intake" Folder ID', config_parameter=PARAM_PREFIX + 'intake_folder_id')
+    dms_intake_folder_id = fields.Char(string='Intake Folder ID', config_parameter=PARAM_PREFIX + 'intake_folder_id')
     # only whether the secret is there, never its value
-    dms_secret_set = fields.Boolean(string='Client Secret in odoo.conf', compute='_compute_dms_secret_set')
+    dms_secret_set = fields.Boolean(string='Secret in odoo.conf', compute='_compute_dms_secret_set')
 
     def _compute_dms_secret_set(self):
         for settings in self:

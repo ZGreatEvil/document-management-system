@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="assets_backend" name="document_management_system backend assets" inherit_id="web.assets_backend">
+        <xpath expr="." position="inside">
+            <link rel="stylesheet" type="text/scss" href="/document_management_system/static/src/scss/dms.scss"/>
+            <script type="text/javascript" src="/document_management_system/static/src/js/dms_help.js"/>
+        </xpath>
+    </template>
+
+    <record id="action_dms_help" model="ir.actions.client">
+        <field name="name">Project Files Guide</field>
+        <field name="tag">dms_help</field>
+    </record>
+</odoo>

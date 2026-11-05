@@ -41,7 +41,9 @@ class DmsCommon(SavepointCase):
         cls.project_manager = make_user('dms_pm', 'base.group_user,project.group_project_manager')
         cls.manager = make_user('dms_manager', 'base.group_user,project.group_project_manager,'
                                                'document_management_system.group_dms_manager')
-        for user in (cls.member, cls.outsider, cls.project_manager, cls.manager):
+        # only these two get an address: the administrators below could open every project, so with an address
+        # they would be members of all of them
+        for user in (cls.member, cls.outsider):
             user.dms_m365_email = '%s@example.test' % user.login
 
         # the member works in the technical division, which numbers BSTs
@@ -72,9 +74,10 @@ class DmsCommon(SavepointCase):
         cls.code_other = make_code('ZDMQB902', cls.company)
         cls.code_b = make_code('ZDMQB903', cls.company_b)
 
-        cls.project = env['project.project'].create({'name': 'DMS test project', 'company_id': cls.company.id,
-                                                     'dms_unique_code_id': cls.code.id})
-        cls.project.dms_extra_member_ids = cls.member
+        # invited users only, and only the member is invited: members are whoever can open the project
+        cls.project = env['project.project'].create({
+            'name': 'DMS test project', 'company_id': cls.company.id, 'dms_unique_code_id': cls.code.id,
+            'privacy_visibility': 'followers', 'allowed_internal_user_ids': [(6, 0, cls.member.ids)]})
 
         cls.type_qtn = env.ref('document_numbering.type_qtn')
 
@@ -143,14 +146,21 @@ class TestProjectLink(DmsCommon):
         with self.assertRaisesRegex(AccessError, 'Document Management administrators'):
             self.project.with_user(self.project_manager).write({'dms_unique_code_id': False})
 
-    def test_project_manager_sets_no_extra_members(self):
-        with self.assertRaises(AccessError):
-            self.project.with_user(self.project_manager).write({'dms_extra_member_ids': [(4, self.outsider.id)]})
-        self.project.with_user(self.manager).write({'dms_extra_member_ids': [(4, self.outsider.id)]})
-        self.assertIn(self.outsider, self.project.dms_extra_member_ids)
+    def test_project_manager_changes_members_through_project_access(self):
+        self.project.with_user(self.project_manager).write({'allowed_internal_user_ids': [(4, self.outsider.id)]})
+        self.assertIn(self.outsider, self.project.dms_member_user_ids)
+
+    def test_code_already_linked_refused_before_sharepoint(self):
+        project = self.new_project()
+        self.graph.reset_calls()
+        with self.assertRaisesRegex(UserError, 'already linked to project DMS test project'):
+            project.write({'dms_unique_code_id': self.code.id})
+        with self.assertRaisesRegex(UserError, 'already linked'):
+            self.new_project(dms_unique_code_id=self.code.id)
+        self.assertEqual(self.graph.calls, [])
 
     def test_empty_values_on_create_allowed(self):
-        project = self.new_project(user=self.project_manager, dms_unique_code_id=False, dms_extra_member_ids=[])
+        project = self.new_project(user=self.project_manager, dms_unique_code_id=False)
         self.assertFalse(project.dms_unique_code_id)
         self.assertEqual(project.dms_sync_state, 'ok')
 
@@ -159,11 +169,12 @@ class TestProjectLink(DmsCommon):
         self.assertEqual(self.project.name, 'Renamed')
 
     def test_one_project_per_code(self):
+        # the unique index is the last guard, also when the friendly check is bypassed
         project = self.new_project()
         with mute_logger('odoo.sql_db'), self.assertRaises(IntegrityError):
             with self.env.cr.savepoint():
-                project.write({'dms_unique_code_id': self.code.id})
-                project.flush()
+                self.env.cr.execute('UPDATE project_project SET dms_unique_code_id = %s WHERE id = %s',
+                                    [self.code.id, project.id])
 
     def test_code_of_another_company_refused(self):
         with self.assertRaises(ValidationError):

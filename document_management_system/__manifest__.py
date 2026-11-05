@@ -11,7 +11,10 @@
     'data': [
         'security/dms_security.xml',
         'security/ir.model.access.csv',
+        'data/ir_cron.xml',
+        'views/assets.xml',
         'views/res_config_settings_views.xml',
+        'views/res_users_views.xml',
         'views/dms_file_views.xml',
         'views/project_views.xml',
         'wizard/dms_file_add_wizard_views.xml',

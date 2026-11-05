@@ -4,4 +4,7 @@
               sequence="40" groups="group_dms_user"/>
     <menuitem id="menu_dms_projects" name="Projects" parent="menu_dms_root" action="action_dms_projects" sequence="10"/>
     <menuitem id="menu_dms_files" name="Files" parent="menu_dms_root" action="action_dms_file" sequence="20"/>
+    <!-- under document_library's Help menu, after its User Manual (10) and What's New (20) -->
+    <menuitem id="menu_dms_help" name="Project Files Guide" parent="document_library.menu_document_library_help"
+              action="action_dms_help" sequence="30" groups="group_dms_user"/>
 </odoo>

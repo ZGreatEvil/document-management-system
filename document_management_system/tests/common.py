@@ -72,6 +72,13 @@ class FakeGraph(object):
             'link': {'type': 'view', 'scope': scope, 'webUrl': url}})
         return url
 
+    def add_direct(self, item_id, email=None, group=None, roles=('write',)):
+        """a permission given to one person or a group directly, not through a link"""
+        granted = {'siteGroup': {'displayName': group}} if group else {'user': {'email': email}}
+        perm = {'id': self._new_id('direct'), 'roles': list(roles), 'grantedToV2': granted}
+        self.perms.setdefault(item_id, []).append(perm)
+        return perm['id']
+
     def path_of(self, item_id):
         parts = []
         item = self.items.get(item_id)
@@ -81,7 +88,7 @@ class FakeGraph(object):
         return '/'.join(reversed(parts))
 
     def emails_on_link(self, item_id):
-        link = next(p for p in self.perms.get(item_id, []) if p['id'] == 'perm-%s' % item_id)
+        link = next(p for p in self.perms.get(item_id, []) if p['id'] == 'perm-%s' % item_id and p.get('link'))
         return set(link.get('emails', ()))
 
     # ------------------------------------------------------------------
@@ -137,6 +144,8 @@ class FakeGraph(object):
             return self._view(self.items[item_id])
         match = re.match(r'^/drives/[^/]+/items/([^/:?]+)/permissions$', path)
         if match:
+            if match.group(1) not in self.items:
+                raise DmsGraphError(404, 'itemNotFound')
             return {'value': copy.deepcopy(self.perms.get(match.group(1), []))}
         match = re.match(r'^/drives/[^/]+/items/([^/:?]+)(\?.*)?$', path)
         if match:
@@ -171,12 +180,20 @@ class FakeGraph(object):
         if match:
             url = decode_share(match.group(1))
             item_id = self.links[url]
-            perm = next(p for p in self.perms[item_id] if p['link'].get('webUrl') == url)
+            perm = next(p for p in self.perms[item_id] if p.get('link', {}).get('webUrl') == url)
             perm['emails'] = sorted(set(perm['emails']) | {r['email'] for r in json['recipients']})
             # grant may hand back a different url; the module must keep this one
             perm['link']['webUrl'] = url + '?granted'
             self.links[perm['link']['webUrl']] = item_id
             return {'value': [copy.deepcopy(perm)]}
+        match = re.match(r'^/drives/[^/]+/items/([^/:]+)/permissions/([^/]+)/revokeGrants$', path)
+        if match:
+            perm = next((p for p in self.perms.get(match.group(1), []) if p['id'] == match.group(2)), None)
+            if not perm or perm.get('link', {}).get('scope') != 'users':
+                raise DmsGraphError(400, 'invalidRequest')
+            gone = {g['email'] for g in json['grantees']}
+            perm['emails'] = [e for e in perm['emails'] if e not in gone]
+            return copy.deepcopy(perm)
         match = re.match(r'^/drives/[^/]+/items/([^/:]+)/invite$', path)
         if match:
             self.invites.setdefault(match.group(1), []).append(

@@ -12,6 +12,11 @@ from odoo.addons.document_management_system.models.graph_client import DmsGraphE
 from .test_models import DmsCommon
 
 
+def only_test_addresses(emails):
+    """the test users' addresses only: on a database with real data, its project administrators are members too"""
+    return {email for email in emails if email.endswith('@example.test')}
+
+
 @tagged('post_install', '-at_install', 'dms')
 class TestNaming(DmsCommon):
 
@@ -57,50 +62,56 @@ class TestMembers(DmsCommon):
             user.dms_m365_email = '%s@example.test' % login
         return user
 
-    def test_member_rule(self):
-        pm = self.make_user('dms_rule_pm')
+    def test_invited_only_project(self):
+        # members are exactly who can open the project: here the invited users and project administrators
         invited = self.make_user('dms_rule_invited')
-        requester = self.make_user('dms_rule_requester')
-        cancelled_requester = self.make_user('dms_rule_cancelled')
-        technician = self.make_user('dms_rule_tech')
+        admin = self.make_user('dms_rule_admin', groups='base.group_user,project.group_project_manager')
+        not_invited = self.make_user('dms_rule_not_invited')
         no_address = self.make_user('dms_rule_noaddress', email=False)
         archived = self.make_user('dms_rule_archived')
-        tech_employee = self.env['hr.employee'].create({'name': 'Tech', 'user_id': technician.id,
-                                                        'department_id': self.dept_tec.id})
-        project = self.project
-        project.write({'user_id': pm.id, 'privacy_visibility': 'followers',
-                       'allowed_internal_user_ids': [(6, 0, (invited | no_address | archived).ids)]})
-        self.make_number('BST-801/ZDMQB901/XI/26', self.code, self.type_bst, self.div_tec, requester)
-        self.make_number('BST-802/ZDMQB901/XI/26', self.code, self.type_bst, self.div_tec, cancelled_requester,
-                         state='cancelled')
-        self.make_number('WO-801/ZDMQB901/XI/26', self.code, self.type_wo, self.div_tec,
-                         team_ids=[(6, 0, (tech_employee | self.emp_member).ids)], pm_id=tech_employee.id)
+        project_manager = self.make_user('dms_rule_pm')
+        self.project.write({'user_id': project_manager.id,
+                            'allowed_internal_user_ids': [(6, 0, (self.member | invited | no_address | archived).ids)]})
         archived.active = False
+        members = self.project._dms_compute_member_users()
+        for user in (self.member, invited, admin):
+            self.assertIn(user, members, user.login)
+        # the project manager field alone gives no access to an invited-only project in odoo
+        for user in (not_invited, no_address, archived, project_manager, self.outsider):
+            self.assertNotIn(user, members, user.login)
 
-        members = project._dms_compute_member_users()
-        self.assertEqual(members, pm | invited | requester | technician | self.member)
-        for left_out in (no_address, archived, cancelled_requester, self.outsider):
-            self.assertNotIn(left_out, members)
-
-    def test_invited_users_count_only_for_invited_projects(self):
-        invited = self.make_user('dms_rule_invited2')
-        self.project.write({'privacy_visibility': 'employees', 'allowed_internal_user_ids': [(6, 0, invited.ids)]})
-        self.assertNotIn(invited, self.project._dms_compute_member_users())
-        self.project.write({'privacy_visibility': 'followers'})
-        self.assertIn(invited, self.project._dms_compute_member_users())
+    def test_project_for_all_employees(self):
+        self.project.write({'privacy_visibility': 'employees'})
+        members = self.project.dms_member_user_ids
+        self.assertIn(self.member, members)
+        self.assertIn(self.outsider, members)
 
     def test_portal_users_never_members(self):
         portal = self.make_user('dms_rule_portal', groups='base.group_portal')
-        self.project.sudo().write({'dms_extra_member_ids': [(4, portal.id)]})
+        self.project.write({'privacy_visibility': 'portal', 'allowed_portal_user_ids': [(4, portal.id)]})
         self.assertNotIn(portal, self.project.dms_member_user_ids)
+        self.assertIn(self.outsider, self.project.dms_member_user_ids)
+
+    def test_other_company_users_never_members(self):
+        stranger = new_test_user(self.env, login='dms_rule_stranger', groups='base.group_user',
+                                 company_id=self.company_b.id, company_ids=[(6, 0, self.company_b.ids)])
+        stranger.dms_m365_email = 'stranger@example.test'
+        self.project.write({'privacy_visibility': 'employees'})
+        self.assertNotIn(stranger, self.project.dms_member_user_ids)
+
+    def test_becoming_project_administrator_makes_a_member(self):
+        user = self.make_user('dms_rule_promoted')
+        self.assertNotIn(user, self.project.dms_member_user_ids)
+        self.env.ref('project.group_project_manager').write({'users': [(4, user.id)]})
+        self.assertIn(user, self.project.dms_member_user_ids)
 
     def test_member_change_stored_and_marks_shared_files_pending(self):
         newcomer = self.make_user('dms_rule_newcomer')
-        self.project.write({'dms_extra_member_ids': [(4, newcomer.id)]})
+        self.project.write({'allowed_internal_user_ids': [(4, newcomer.id)]})
         self.assertIn(newcomer, self.project.dms_member_user_ids)
         self.assertEqual(self.project.dms_sync_state, 'ok')  # no files yet
         self.make_file()
-        self.project.write({'dms_extra_member_ids': [(3, newcomer.id)]})
+        self.project.write({'allowed_internal_user_ids': [(3, newcomer.id)]})
         self.assertNotIn(newcomer, self.project.dms_member_user_ids)
         self.assertEqual(self.project.dms_sync_state, 'pending')
 
@@ -120,7 +131,9 @@ class TestLinkProject(DmsCommon):
         self.assertEqual(self.graph.path_of(folder_id), '%s/ZDMQB902' % year)
         self.assertEqual(self.graph.items[folder_id]['parent'],
                          next(i['id'] for i in self.graph.items.values() if i['name'] == year))
-        self.assertIn(self.manager, project.dms_member_user_ids)
+        # a new project is visible to every employee by default, so they are all members
+        self.assertIn(self.member, project.dms_member_user_ids)
+        self.assertIn(self.outsider, project.dms_member_user_ids)
         self.assertEqual(project._dms_folder_path(), 'Projects/%s/ZDMQB902/' % year)
 
     def test_existing_folders_are_reused(self):
@@ -186,8 +199,8 @@ class TestUpload(DmsCommon):
         self.assertEqual(self.graph.items[item_id]['parent'], self.project.sudo().dms_folder_item_id)
         # the url grant answered with, not the one createLink gave
         self.assertEqual(file.share_url, 'https://sharepoint.test/link/%s?granted' % item_id)
-        self.assertEqual(self.graph.emails_on_link(item_id), {'dms_member@example.test'})
-        self.assertEqual(file.sudo().grant_ids.mapped('user_id'), self.member)
+        self.assertEqual(only_test_addresses(self.graph.emails_on_link(item_id)), {'dms_member@example.test'})
+        self.assertIn(self.member, file.sudo().grant_ids.mapped('user_id'))
         self.assertEqual(file.sudo().link_permission_id, 'perm-%s' % item_id)
         put = next(path for method, path in self.graph.calls if method == 'PUT')
         self.assertIn('conflictBehavior=rename', put)
@@ -266,18 +279,27 @@ class TestUpload(DmsCommon):
         self.assertEqual(self.files().number_id, number)
 
     def test_non_member_refused(self):
-        with self.assertRaisesRegex(AccessError, 'Only members'):
+        # the outsider cannot open this invited-only project at all, so odoo's own project rule refuses first
+        with self.assertRaises(AccessError):
             self.project.with_user(self.outsider).action_dms_add_file()
-        with self.assertRaisesRegex(AccessError, 'Only members'):
+        with self.assertRaises(AccessError):
             self.wizard(user=self.outsider).action_add()
         self.assertFalse(self.graph.calls)
+
+    def test_non_member_of_a_visible_project_told_why(self):
+        # a project they can see but that is not theirs: refused with this module's message
+        self.project.write({'privacy_visibility': 'employees'})
+        stranger = new_test_user(self.env, login='dms_no_address_viewer', groups='base.group_user',
+                                 company_id=self.company.id)
+        with self.assertRaisesRegex(AccessError, 'Only members'):
+            self.project.with_user(stranger).action_dms_add_file()
 
     def test_manager_may_add_without_being_a_member(self):
         self.assertNotIn(self.manager, self.project.dms_member_user_ids)
         self.wizard(user=self.manager).action_add()
         file = self.files()
         # access goes to the members only, not to the manager who uploaded
-        self.assertEqual(self.graph.emails_on_link(file.sudo().item_id), {'dms_member@example.test'})
+        self.assertEqual(only_test_addresses(self.graph.emails_on_link(file.sudo().item_id)), {'dms_member@example.test'})
 
     def test_project_without_code_refused(self):
         project = self.env['project.project'].create({'name': 'No code', 'company_id': self.company.id})

@@ -157,6 +157,39 @@ def remove_links(client, drive_id, item_id, keep=()):
     return removed
 
 
+def permission_emails(perm):
+    """lower-case addresses a permission names: its user (direct) or the people on a link"""
+    emails = set()
+    identities = list(perm.get('grantedToIdentitiesV2') or []) + [perm.get('grantedToV2') or perm.get('grantedTo') or {}]
+    for identity in identities:
+        for part in ('user', 'siteUser'):
+            who = identity.get(part) or {}
+            if who.get('email'):
+                emails.add(who['email'].lower())
+            login = who.get('loginName') or ''
+            if '|' in login and '@' in login:
+                emails.add(login.rsplit('|', 1)[1].lower())
+    return emails
+
+
+def remove_direct_access(client, drive_id, item_id, email):
+    """removes direct (non-link) permissions held by this address, e.g. the write access a file can keep from an
+    upload folder when "copy link" gave it permissions of its own. groups are never touched, and a permission
+    sharepoint refuses to delete (an inherited one) is skipped. returns how many were removed"""
+    removed = 0
+    for perm in list_permissions(client, drive_id, item_id):
+        if perm.get('link') or email not in permission_emails(perm):
+            continue
+        try:
+            client.delete('/drives/%s/items/%s/permissions/%s' % (drive_id, item_id, perm['id']))
+            removed += 1
+        except DmsGraphError as e:
+            if not 400 <= e.status < 500:
+                raise
+            _logger.info('graph: a direct permission was left in place: HTTP %s %s', e.status, e.code)
+    return removed
+
+
 def delete_item(client, drive_id, item_id):
     """clean-up after a failed add (best effort: the error that caused it is what the user sees)"""
     try:

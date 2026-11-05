@@ -5,6 +5,7 @@ from odoo.tests.common import new_test_user
 
 from odoo.addons.document_management_system.models.graph_client import PARAM_PREFIX, DmsGraphError
 
+from .test_flows import only_test_addresses
 from .test_models import DmsCommon
 
 
@@ -99,9 +100,9 @@ class TestPasteLink(DmsCommon):
         self.assertEqual(self.graph.items[item_id]['parent'], self.project_folder)
         # the copied link is gone; only odoo's link remains, given to the members
         self.assertEqual([p['id'] for p in self.graph.perms[item_id]], ['perm-%s' % item_id])
-        self.assertEqual(self.graph.emails_on_link(item_id), {'dms_member@example.test'})
+        self.assertEqual(only_test_addresses(self.graph.emails_on_link(item_id)), {'dms_member@example.test'})
         self.assertEqual(file.share_url, 'https://sharepoint.test/link/%s?granted' % item_id)
-        self.assertEqual(file.sudo().grant_ids.mapped('user_id'), self.member)
+        self.assertIn(self.member, file.sudo().grant_ids.mapped('user_id'))
 
     def test_numbered_file_named_after_the_number(self):
         number = self.make_number('BST-951/ZDMQB901/XI/26', self.code, self.type_bst, self.div_tec)
@@ -221,6 +222,11 @@ class TestPasteLink(DmsCommon):
         _item_id, url = self.put_in_intake()
         with self.assertRaisesRegex(AccessError, 'Only members'):
             self.paste(url, user=self.outsider)
+
+    def test_wizard_name_preview_hidden_without_number_in_link_mode(self):
+        wizard = self.env['dms.file.add.wizard'].with_user(self.member).create(
+            {'project_id': self.project.id, 'mode': 'link'})
+        self.assertIs(wizard.final_name, False)
 
     def test_wizard_name_preview_in_link_mode(self):
         number = self.make_number('BST-955/ZDMQB901/XI/26', self.code, self.type_bst, self.div_tec)

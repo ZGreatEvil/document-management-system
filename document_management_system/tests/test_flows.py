@@ -256,6 +256,18 @@ class TestUpload(DmsCommon):
         self.assertEqual(first.state, 'superseded')
         self.assertEqual(self.files().filtered(lambda f: f.state == 'shared').name, 'BST-904_ZDMQB901_XI_26_Rev.1.pdf')
 
+    def test_simultaneous_add_for_a_number_explained_and_cleaned_up(self):
+        # two people pass the check at the same moment: the unique index stops the second one, which gets a clear
+        # message and whose upload is removed from sharepoint again
+        number = self.make_number('BST-909/ZDMQB901/XI/26', self.code, self.type_bst, self.div_tec)
+        self.make_file('first.pdf', number_id=number.id)
+        File = self.env['dms.file']
+        with patch.object(type(File), '_check_number_free', lambda self, number_id: None):
+            with self.assertRaisesRegex(UserError, 'at the same moment'):
+                with self.env.cr.savepoint():
+                    File.with_user(self.member)._dms_add(self.project, b'%PDF late', 'late.pdf', number=number)
+        self.assertFalse([i for i in self.graph.items.values() if i['name'] == 'BST-909_ZDMQB901_XI_26.pdf'])
+
     def test_cancelled_number_refused(self):
         number = self.make_number('BST-905/ZDMQB901/XI/26', self.code, self.type_bst, self.div_tec, state='cancelled')
         with self.assertRaisesRegex(UserError, 'cancelled'):

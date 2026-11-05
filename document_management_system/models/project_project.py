@@ -31,7 +31,8 @@ class Project(models.Model):
     dms_unique_code_name = fields.Char(related='dms_unique_code_id.name', string='Unique Code Name')
     dms_folder_item_id = fields.Char(string='SharePoint Folder ID', copy=False, readonly=True, groups=MANAGER_GROUP)
     dms_file_ids = fields.One2many('dms.file', 'project_id', string='Files')
-    dms_file_count = fields.Integer(compute='_compute_dms_file_count', string='File Count')
+    dms_file_count = fields.Integer(compute='_compute_dms_file_count', string='File Count',
+                                    help='Current files; superseded and removed ones are kept on the Files tab.')
     # a stored copy written by the member sync, so record rules can use it
     dms_member_user_ids = fields.Many2many(
         'res.users', 'dms_project_member_rel', 'project_id', 'user_id', string='Members (files)',
@@ -50,8 +51,9 @@ class Project(models.Model):
 
     @api.depends_context('uid')
     def _compute_dms_file_count(self):
-        # counted as the user, so files they cannot see are not counted
-        data = self.env['dms.file'].read_group([('project_id', 'in', self.ids)], ['project_id'], ['project_id'])
+        # the current (shared) files, counted as the user: the same files the list behind the count shows
+        data = self.env['dms.file'].read_group([('project_id', 'in', self.ids), ('state', '=', 'shared')],
+                                               ['project_id'], ['project_id'])
         counts = {d['project_id'][0]: d['project_id_count'] for d in data}
         for project in self:
             project.dms_file_count = counts.get(project.id, 0)
@@ -87,6 +89,9 @@ class Project(models.Model):
 
     def _dms_check_code_change(self, code_id):
         if code_id:
+            code = self.env['doc.number.unique.code'].sudo().browse(code_id)
+            if not code.active:
+                raise UserError(_('Unique code %s is archived and cannot be linked to a project.') % code.name)
             # checked before sharepoint is touched; the unique index stays as the last guard
             taken = self.sudo().with_context(active_test=False).search(
                 [('dms_unique_code_id', '=', code_id), ('id', 'not in', self.ids)], limit=1)
@@ -163,30 +168,51 @@ class Project(models.Model):
         project.write({'dms_folder_item_id': folder_id})
         return folder_id
 
-    def _dms_compute_member_users(self):
-        """who may open this project's files. the one place the member rule lives (agreed 2026-11-05):
-        exactly the active internal users who can open the project in odoo, as odoo's own project access rules
-        decide (invited users of an invited-only project, every employee otherwise, project administrators always,
-        each within their companies), minus users without a microsoft 365 address"""
-        self.ensure_one()
-        members = self.env['res.users']
-        for user in self.env['res.users'].sudo().search([('share', '=', False)]):
-            if not user._dms_email():
+    def _dms_visible_to(self, users):
+        """the member rule (agreed 2026-11-05) lives here: a user is a member of a project exactly when they are an
+        active internal user with a microsoft 365 address who can open the project in odoo, as odoo's own project
+        access rules decide (invited users of an invited-only project, every employee otherwise, project
+        administrators always, each within their companies).
+        returns {user id: set of ids of these projects the user can open}; one query per user, whatever the
+        number of projects"""
+        projects = self.sudo().with_context(active_test=False)
+        visible = {}
+        for user in users.sudo().with_context(active_test=False):
+            visible[user.id] = set()
+            if not (user.active and not user.share and user._dms_email()):
                 continue
-            project = self.with_user(user).with_context(allowed_company_ids=user.company_ids.ids)
-            if project.check_access_rights('read', raise_exception=False) and project._filter_access_rules('read'):
-                members |= user
-        return members
+            as_user = projects.with_user(user).with_context(allowed_company_ids=user.company_ids.ids,
+                                                            active_test=False)
+            if as_user.check_access_rights('read', raise_exception=False):
+                visible[user.id] = set(as_user.search([('id', 'in', projects.ids)]).ids)
+        return visible
 
-    def _dms_update_members(self):
-        """stores the members; when they changed and files are shared, the project waits for the member sync"""
+    def _dms_compute_member_users(self):
+        """who may open this project's files (see _dms_visible_to)"""
+        self.ensure_one()
+        candidates = self.env['res.users'].sudo().search([('share', '=', False)])
+        visible = self._dms_visible_to(candidates)
+        return candidates.filtered(lambda u: self.id in visible[u.id])
+
+    def _dms_update_members(self, users=None):
+        """stores the members of these projects. with users given, only their membership is checked (a change to
+        one user or group). when the members changed and files are shared, the project waits for the member sync"""
+        projects = self.sudo().filtered('dms_unique_code_id')
+        if not projects:
+            return
+        Users = self.env['res.users'].sudo()
+        candidates = users if users is not None else Users.search([('share', '=', False)])
+        visible = projects._dms_visible_to(candidates)
         changed = False
-        for project in self.sudo():
-            users = project._dms_compute_member_users()
+        for project in projects:
             # archived users still count as stored: they are exactly the ones whose access must go
-            if users == project.with_context(active_test=False).dms_member_user_ids:
+            stored = set(project.with_context(active_test=False).dms_member_user_ids.ids)
+            wanted = {uid for uid, ids in visible.items() if project.id in ids}
+            if users is not None:
+                wanted |= stored - set(visible)
+            if wanted == stored:
                 continue
-            vals = {'dms_member_user_ids': [(6, 0, users.ids)]}
+            vals = {'dms_member_user_ids': [(6, 0, sorted(wanted))]}
             if project.dms_file_ids.filtered(lambda f: f.state == 'shared'):
                 vals['dms_sync_state'] = 'pending'
             project.write(vals)

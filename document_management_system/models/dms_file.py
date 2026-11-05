@@ -3,6 +3,8 @@ import logging
 import mimetypes
 import os
 
+from psycopg2 import IntegrityError
+
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tools.mimetypes import guess_mimetype
@@ -131,6 +133,7 @@ class DmsFile(models.Model):
         """7.2: uploads one file into the project folder, shares it with the members and records it.
         when sharepoint fails nothing is saved in odoo, and a file already uploaded is removed again"""
         project = project.sudo()
+        number_label = number.display_number if number else False
         folder_id = project._dms_ensure_folder()
         drive_id = get_settings(self.env)['drive_id']
         if number:
@@ -147,22 +150,30 @@ class DmsFile(models.Model):
             permission_id, share_url = sharepoint.share_with(client, drive_id, item['id'], sorted(set(emails.values())))
             if supersede:
                 supersede.sudo().write({'state': 'superseded'})
-            file = self.sudo().create({
-                'name': item.get('name') or name,
-                'project_id': project.id,
-                'number_id': number.id if number else False,
-                'original_filename': original_filename,
-                'source': 'upload',
-                'drive_id': drive_id,
-                'item_id': item['id'],
-                'link_permission_id': permission_id,
-                'share_url': share_url,
-                'size': item.get('size') or len(data),
-                'mimetype': mimetype,
-                'uploaded_by_id': self.env.uid,
-            })
-            self.env['dms.file.grant'].sudo().create([
-                {'file_id': file.id, 'user_id': user.id, 'email': email} for user, email in emails.items()])
+            # a savepoint: when the unique index refuses, only this part is undone and the transaction stays usable
+            with self.env.cr.savepoint():
+                file = self.sudo().create({
+                    'name': item.get('name') or name,
+                    'project_id': project.id,
+                    'number_id': number.id if number else False,
+                    'original_filename': original_filename,
+                    'source': 'upload',
+                    'drive_id': drive_id,
+                    'item_id': item['id'],
+                    'link_permission_id': permission_id,
+                    'share_url': share_url,
+                    'size': item.get('size') or len(data),
+                    'mimetype': mimetype,
+                    'uploaded_by_id': self.env.uid,
+                })
+                self.env['dms.file.grant'].sudo().create([
+                    {'file_id': file.id, 'user_id': user.id, 'email': email} for user, email in emails.items()])
+                # the unique index on shared numbers is checked here, while sharepoint can still be cleaned up
+                self.flush()
+        except IntegrityError:
+            if item:
+                sharepoint.delete_item(client, drive_id, item['id'])
+            raise UserError(self._dms_race_message(number_label))
         except DmsGraphError as e:
             if item:
                 sharepoint.delete_item(client, drive_id, item['id'])
@@ -175,6 +186,14 @@ class DmsFile(models.Model):
                 sharepoint.delete_item(client, drive_id, item['id'])
             raise
         return file
+
+    @api.model
+    def _dms_race_message(self, number_label):
+        """read nothing from the database: after the unique index refused, the transaction can only roll back"""
+        if number_label:
+            return _('Someone else added a file for %s at the same moment. Reload the project to see it; to replace it, '
+                     'add the file again with "Replace the current file".') % number_label
+        return _('Someone else changed this project\'s files at the same moment. Reload the project and try again.')
 
     @api.model
     def _dms_resolve_intake_link(self, client, url):
@@ -213,6 +232,7 @@ class DmsFile(models.Model):
         others made on it, then shares and records it like an upload. when a step fails the file goes back to the
         upload folder under its own name and nothing is saved in odoo"""
         project = project.sudo()
+        number_label = number.display_number if number else False
         folder_id = project._dms_ensure_folder()
         drive_id = get_settings(self.env)['drive_id']
         intake_id = self.env.user.sudo().dms_intake_item_id
@@ -238,22 +258,30 @@ class DmsFile(models.Model):
             permission_id, share_url = sharepoint.share_with(client, drive_id, item['id'], sorted(set(emails.values())))
             if supersede:
                 supersede.sudo().write({'state': 'superseded'})
-            file = self.sudo().create({
-                'name': moved.get('name') or name,
-                'project_id': project.id,
-                'number_id': number.id if number else False,
-                'original_filename': original,
-                'source': 'link',
-                'drive_id': drive_id,
-                'item_id': item['id'],
-                'link_permission_id': permission_id,
-                'share_url': share_url,
-                'size': item.get('size') or 0,
-                'mimetype': (item.get('file') or {}).get('mimeType') or mimetypes.guess_type(original)[0],
-                'uploaded_by_id': self.env.uid,
-            })
-            self.env['dms.file.grant'].sudo().create([
-                {'file_id': file.id, 'user_id': user.id, 'email': email} for user, email in emails.items()])
+            # a savepoint: when the unique index refuses, only this part is undone and the transaction stays usable
+            with self.env.cr.savepoint():
+                file = self.sudo().create({
+                    'name': moved.get('name') or name,
+                    'project_id': project.id,
+                    'number_id': number.id if number else False,
+                    'original_filename': original,
+                    'source': 'link',
+                    'drive_id': drive_id,
+                    'item_id': item['id'],
+                    'link_permission_id': permission_id,
+                    'share_url': share_url,
+                    'size': item.get('size') or 0,
+                    'mimetype': (item.get('file') or {}).get('mimeType') or mimetypes.guess_type(original)[0],
+                    'uploaded_by_id': self.env.uid,
+                })
+                self.env['dms.file.grant'].sudo().create([
+                    {'file_id': file.id, 'user_id': user.id, 'email': email} for user, email in emails.items()])
+                # the unique index on shared numbers is checked here, while sharepoint can still be put back
+                self.flush()
+        except IntegrityError:
+            if moved:
+                self._dms_undo_move(client, drive_id, item['id'], intake_id, original)
+            raise UserError(self._dms_race_message(number_label))
         except DmsGraphError as e:
             if moved:
                 self._dms_undo_move(client, drive_id, item['id'], intake_id, original)

@@ -14,7 +14,7 @@
                         <div class="col-12 col-lg-6 o_setting_box" id="dms_app">
                             <div class="o_setting_right_pane">
                                 <span class="o_form_label">App registration</span>
-                                <div class="text-muted">
+                                <div class="o_dms_note">
                                     The Entra ID app with the Sites.Selected permission. Its client secret is
                                     read from odoo.conf (dms_graph_client_secret), never stored here.
                                 </div>
@@ -37,7 +37,7 @@
                         <div class="col-12 col-lg-6 o_setting_box" id="dms_site">
                             <div class="o_setting_right_pane">
                                 <span class="o_form_label">SharePoint site</span>
-                                <div class="text-muted">
+                                <div class="o_dms_note">
                                     The site, its document library, and the two top folders in that library.
                                 </div>
                                 <div class="content-group mt16">

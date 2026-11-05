@@ -159,6 +159,14 @@ class TestProjectLink(DmsCommon):
             self.new_project(dms_unique_code_id=self.code.id)
         self.assertEqual(self.graph.calls, [])
 
+    def test_archived_code_refused(self):
+        self.code_other.active = False
+        project = self.new_project()
+        self.graph.reset_calls()
+        with self.assertRaisesRegex(UserError, 'archived'):
+            project.write({'dms_unique_code_id': self.code_other.id})
+        self.assertEqual(self.graph.calls, [])
+
     def test_empty_values_on_create_allowed(self):
         project = self.new_project(user=self.project_manager, dms_unique_code_id=False)
         self.assertFalse(project.dms_unique_code_id)
@@ -211,6 +219,16 @@ class TestFiles(DmsCommon):
         self.make_file()
         self.assertEqual(self.project.with_user(self.member).dms_file_count, 1)
         self.assertEqual(self.project.with_user(self.outsider).dms_file_count, 0)
+
+    def test_file_count_matches_the_list_it_opens(self):
+        self.make_file('current.pdf')
+        self.make_file('old.pdf', state='superseded')
+        self.make_file('gone.pdf', state='removed')
+        project = self.project.with_user(self.member)
+        action = project.action_dms_open_files()
+        self.assertEqual(action['context'].get('search_default_shared'), 1)
+        shown = self.env['dms.file'].with_user(self.member).search(action['domain'] + [('state', '=', 'shared')])
+        self.assertEqual(project.dms_file_count, len(shown))
 
     def test_files_created_by_the_system_only(self):
         with self.assertRaises(AccessError):

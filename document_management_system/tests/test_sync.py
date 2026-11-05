@@ -139,6 +139,23 @@ class TestSyncTriggers(SyncCommon):
         self.make_number('BST-972/ZDMQB901/XI/26', self.code, self.type_bst, self.div_tec, self.member2)
         self.assertNotIn(self.member2, self.project.dms_member_user_ids)
 
+    def test_one_user_change_does_not_scale_with_projects(self):
+        # 25 more linked projects must not make a user change slower: one access query per changed user
+        codes = self.env['doc.number.unique.code'].create([{
+            'name': 'ZDMQB%03d' % (500 + i), 'origin': 'import', 'company_id': self.company.id,
+            'partner_id': self.code.partner_id.id, 'client_id': self.code.client_id.id,
+            'project_id': self.code.project_id.id, 'detail': 'scale'} for i in range(25)])
+        for code in codes:
+            # invited-only with nobody invited: the change concerns none of them, so nothing is written
+            self.env['project.project'].create({'name': code.name, 'dms_unique_code_id': code.id,
+                                                'privacy_visibility': 'followers',
+                                                'allowed_internal_user_ids': [(5, 0, 0)]})
+        self.env['base'].flush()
+        before = self.env.cr.sql_log_count
+        self.member2.write({'active': False})
+        self.env['base'].flush()
+        self.assertLess(self.env.cr.sql_log_count - before, 60)
+
     def test_other_company_user_never_joins(self):
         self.project.write({'privacy_visibility': 'employees'})
         stranger = new_test_user(self.env, login='dms_stranger', groups='base.group_user',

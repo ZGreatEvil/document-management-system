@@ -1,0 +1,1257 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* document_management_system
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 14.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-05 03:41+0000\n"
+"PO-Revision-Date: 2026-11-05 03:41+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/project_project.py:0
+#, python-format
+msgid "%(file)s: %(count)s link(s) not made by Odoo were deleted."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/wizard/dms_file_add_wizard.py:0
+#, python-format
+msgid ""
+"%(number)s already has a file (%(name)s). Tick \"Replace the current file\" "
+"to add this one as the new version; the old one is kept as superseded."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/wizard/dms_file_add_wizard.py:0
+#, python-format
+msgid "%s + the file's extension"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid "%s already has a shared file. Mark the old one as superseded first."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#: code:addons/document_management_system/wizard/dms_file_add_wizard.py:0
+#, python-format
+msgid "%s does not belong to this project's unique code."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid "%s has already been added to a project."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid "%s is a folder. Copy the link of the file itself, not of a folder."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid ""
+"%s is already in the project folder. If this is a new version of the "
+"document, add a revision to the number first."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/wizard/dms_file_add_wizard.py:0
+#, python-format
+msgid "%s is cancelled and cannot get files."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/project_project.py:0
+#, python-format
+msgid "%s is no longer in SharePoint."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid ""
+"%s is not in the project document library. Put it in your upload folder "
+"first."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid ""
+"%s is not in your upload folder. Move it into your upload folder (not into a"
+" folder inside it), then copy its link again."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/project_project.py:0
+#, python-format
+msgid "%s: its Odoo link was missing and has been made again."
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.res_config_settings_view_form
+msgid "<span class=\"o_form_label\">App registration</span>"
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.res_config_settings_view_form
+msgid "<span class=\"o_form_label\">SharePoint site</span>"
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.view_project_kanban_inherit_dms
+msgid "<span class=\"o_label\">Files</span>"
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.actions.act_window,help:document_management_system.action_dms_projects
+msgid ""
+"A Document Management administrator links a project to its unique code on "
+"the project's Files tab."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__grant_ids
+msgid "Access Given"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model,name:document_management_system.model_res_groups
+msgid "Access Groups"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__message_needaction
+msgid "Action Needed"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/project_project.py:0
+#: model_terms:ir.ui.view,arch_db:document_management_system.dms_file_add_wizard_view_form
+#, python-format
+msgid "Add File"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model,name:document_management_system.model_dms_file_add_wizard
+msgid "Add Project File"
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.dms_file_add_wizard_view_form
+#: model_terms:ir.ui.view,arch_db:document_management_system.edit_project_inherit_dms
+msgid "Add file"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid "Add files with the \"Add file\" button on the project."
+msgstr ""
+
+#. module: document_management_system
+#: model:res.groups,name:document_management_system.group_dms_manager
+msgid "Administrator"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__message_attachment_count
+msgid "Attachment Count"
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.dms_file_add_wizard_view_form
+msgid "Cancel"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/wizard/dms_file_add_wizard.py:0
+#, python-format
+msgid "Choose a file to add."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_res_config_settings__dms_client_id
+msgid "Client ID"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__company_id
+msgid "Company"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model,name:document_management_system.model_res_config_settings
+msgid "Config Settings"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/res_config_settings.py:0
+#, python-format
+msgid "Connected"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/res_config_settings.py:0
+#, python-format
+msgid "Connected to SharePoint site \"%s\"."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__create_uid
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_add_wizard__create_uid
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_grant__create_uid
+msgid "Created by"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__create_date
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_add_wizard__create_date
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_grant__create_date
+msgid "Created on"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_add_wizard__current_file_id
+msgid "Current File"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_add_wizard__current_file_name
+msgid "Current File Name"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,help:document_management_system.field_project_project__dms_file_count
+msgid "Current files; superseded and removed ones are kept on the Files tab."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid ""
+"Deleted from SharePoint because %s was cancelled. It can be restored from "
+"the site's recycle bin by a site owner."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__display_name
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_add_wizard__display_name
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_grant__display_name
+#: model:ir.model.fields,field_description:document_management_system.field_doc_number__display_name
+#: model:ir.model.fields,field_description:document_management_system.field_project_project__display_name
+#: model:ir.model.fields,field_description:document_management_system.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:document_management_system.field_res_groups__display_name
+#: model:ir.model.fields,field_description:document_management_system.field_res_users__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_project_project__dms_can_manage
+msgid "Dms Can Manage"
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.res_config_settings_view_form
+#: model_terms:ir.ui.view,arch_db:document_management_system.view_users_form_inherit_dms
+msgid "Document Management"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.module.category,name:document_management_system.module_category_dms
+msgid "Document Management System"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.actions.server,name:document_management_system.ir_cron_dms_member_sync_ir_actions_server
+#: model:ir.cron,cron_name:document_management_system.ir_cron_dms_member_sync
+#: model:ir.cron,name:document_management_system.ir_cron_dms_member_sync
+msgid "Document Management: file access sync"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.actions.server,name:document_management_system.ir_cron_dms_drift_check_ir_actions_server
+#: model:ir.cron,cron_name:document_management_system.ir_cron_dms_drift_check
+#: model:ir.cron,name:document_management_system.ir_cron_dms_drift_check
+msgid "Document Management: nightly file access check"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model,name:document_management_system.model_doc_number
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__number_id
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_add_wizard__number_id
+#: model_terms:ir.ui.view,arch_db:document_management_system.dms_file_view_search
+msgid "Document Number"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__drive_id
+msgid "Drive ID"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_grant__email
+msgid "Email"
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.view_users_form_inherit_dms
+msgid "Empty: the login is used"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields.selection,name:document_management_system.selection__dms_file__state__error
+#: model:ir.model.fields.selection,name:document_management_system.selection__project_project__dms_sync_state__error
+msgid "Error"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/project_project.py:0
+#, python-format
+msgid "Every shared file of %s now matches the member list."
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.edit_project_inherit_dms
+msgid ""
+"Everyone who can open this project in Odoo. To change it, change who has access to the\n"
+"                            project (Settings tab, Visibility and invited users)."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_add_wizard__file
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_grant__file_id
+msgid "File"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_project_project__dms_sync_state
+msgid "File Access"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_project_project__dms_file_count
+msgid "File Count"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__name
+msgid "File Name"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__mimetype
+msgid "File Type"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/project_project.py:0
+#, python-format
+msgid "File access check:"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#: code:addons/document_management_system/models/dms_file.py:0
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid "File access is kept up to date by the system."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/project_project.py:0
+#, python-format
+msgid "File access is up to date"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_add_wizard__filename
+msgid "Filename"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.actions.act_window,name:document_management_system.action_dms_file
+#: model:ir.model.fields,field_description:document_management_system.field_project_project__dms_file_ids
+#: model:ir.ui.menu,name:document_management_system.menu_dms_files
+#: model_terms:ir.ui.view,arch_db:document_management_system.edit_project_inherit_dms
+msgid "Files"
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.actions.act_window,help:document_management_system.action_dms_file
+msgid ""
+"Files are added from a project, with the \"Add file\" button on its Files tab.\n"
+"               You see the files of the projects you are a member of."
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.edit_project_inherit_dms
+msgid ""
+"Files can be added once a Document Management administrator links this project to its\n"
+"                        unique code."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/res_config_settings.py:0
+#, python-format
+msgid "Fill in the tenant ID, application ID and site ID first."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__message_follower_ids
+msgid "Followers"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__message_channel_ids
+msgid "Followers (Channels)"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__message_partner_ids
+msgid "Followers (Partners)"
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.dms_file_add_wizard_view_form
+msgid ""
+"For large files: put the file in your own upload folder in SharePoint, use \"Copy link\" on it and\n"
+"                    paste the link here. The file is then moved into the project folder."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_grant__granted_on
+msgid "Granted On"
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.dms_file_view_search
+msgid "Group By"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_add_wizard__mode
+msgid "How"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__id
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_add_wizard__id
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_grant__id
+#: model:ir.model.fields,field_description:document_management_system.field_doc_number__id
+#: model:ir.model.fields,field_description:document_management_system.field_project_project__id
+#: model:ir.model.fields,field_description:document_management_system.field_res_config_settings__id
+#: model:ir.model.fields,field_description:document_management_system.field_res_groups__id
+#: model:ir.model.fields,field_description:document_management_system.field_res_users__id
+msgid "ID"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,help:document_management_system.field_dms_file__message_needaction
+#: model:ir.model.fields,help:document_management_system.field_dms_file__message_unread
+msgid "If checked, new messages require your attention."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,help:document_management_system.field_dms_file__message_has_error
+#: model:ir.model.fields,help:document_management_system.field_dms_file__message_has_sms_error
+msgid "If checked, some messages have a delivery error."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_res_config_settings__dms_intake_folder_id
+msgid "Intake Folder ID"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__message_is_follower
+msgid "Is Follower"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__item_id
+msgid "Item ID"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__last_error
+msgid "Last Error"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file____last_update
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_add_wizard____last_update
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_grant____last_update
+#: model:ir.model.fields,field_description:document_management_system.field_doc_number____last_update
+#: model:ir.model.fields,field_description:document_management_system.field_project_project____last_update
+#: model:ir.model.fields,field_description:document_management_system.field_res_config_settings____last_update
+#: model:ir.model.fields,field_description:document_management_system.field_res_groups____last_update
+#: model:ir.model.fields,field_description:document_management_system.field_res_users____last_update
+msgid "Last Modified on"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_project_project__dms_last_sync
+msgid "Last Sync"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_project_project__dms_last_error
+msgid "Last Sync Error"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__write_uid
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_add_wizard__write_uid
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_grant__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__write_date
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_add_wizard__write_date
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_grant__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_res_config_settings__dms_drive_id
+msgid "Library ID"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__share_url
+msgid "Link"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__link_permission_id
+msgid "Link Permission ID"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/project_project.py:0
+#, python-format
+msgid "Link this project to a unique code first."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/project_project.py:0
+#, python-format
+msgid ""
+"Link this project to a unique code first. Only projects with a unique code "
+"hold files."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__message_main_attachment_id
+msgid "Main Attachment"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_project_project__dms_member_user_ids
+msgid "Members (files)"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__message_has_error
+msgid "Message Delivery error"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__message_ids
+msgid "Messages"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_res_users__dms_m365_email
+msgid "Microsoft 365 Sign-in"
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.res_config_settings_view_form
+msgid "Microsoft 365 connection"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/res_config_settings.py:0
+#, python-format
+msgid ""
+"Microsoft 365 refused the connection (HTTP %(status)s %(code)s). Check the "
+"IDs, the client secret and the app's access to the site."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields.selection,name:document_management_system.selection__dms_file__source__link
+msgid "Moved from an upload folder"
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.dms_file_add_wizard_view_form
+#: model_terms:ir.ui.view,arch_db:document_management_system.edit_project_inherit_dms
+msgid "My upload folder"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_add_wizard__final_name
+msgid "Name in SharePoint"
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.actions.act_window,help:document_management_system.action_dms_file
+msgid "No files yet"
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.actions.act_window,help:document_management_system.action_dms_projects
+msgid "No projects with a unique code yet"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__message_needaction_counter
+msgid "Number of Actions"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__message_has_error_counter
+msgid "Number of errors"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,help:document_management_system.field_dms_file__message_needaction_counter
+msgid "Number of messages which requires an action"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,help:document_management_system.field_dms_file__message_has_error_counter
+msgid "Number of messages with delivery error"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,help:document_management_system.field_dms_file__message_unread_counter
+msgid "Number of unread messages"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/project_project.py:0
+#, python-format
+msgid "Only Document Management administrators can link a unique code."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid "Only Document Management administrators can remove files."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/project_project.py:0
+#, python-format
+msgid ""
+"Only Document Management administrators can start the file access sync."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/project_project.py:0
+#, python-format
+msgid "Only members of this project can add files."
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.dms_file_view_form
+#: model_terms:ir.ui.view,arch_db:document_management_system.dms_file_view_tree
+#: model_terms:ir.ui.view,arch_db:document_management_system.edit_project_inherit_dms
+msgid "Open"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid ""
+"Open \"My upload folder\" first, put the file there, then copy the file's "
+"link."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__original_filename
+msgid "Original File Name"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields.selection,name:document_management_system.selection__dms_file_add_wizard__mode__link
+msgid "Paste a SharePoint link"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/wizard/dms_file_add_wizard.py:0
+#, python-format
+msgid "Paste the link of the file in your upload folder."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid "Paste the link you copied in SharePoint. It starts with https://"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields.selection,name:document_management_system.selection__project_project__dms_sync_state__pending
+msgid "Pending"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model,name:document_management_system.model_project_project
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__project_id
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_add_wizard__project_id
+#: model_terms:ir.ui.view,arch_db:document_management_system.dms_file_view_search
+msgid "Project"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/project_project.py:0
+#, python-format
+msgid "Project %s already has files, so its unique code can no longer change."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model,name:document_management_system.model_dms_file
+#: model_terms:ir.ui.view,arch_db:document_management_system.dms_file_view_form
+msgid "Project File"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model,name:document_management_system.model_dms_file_grant
+msgid "Project File Access"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.ui.menu,name:document_management_system.menu_dms_root
+#: model_terms:ir.ui.view,arch_db:document_management_system.dms_file_view_search
+#: model_terms:ir.ui.view,arch_db:document_management_system.dms_file_view_tree
+msgid "Project Files"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.actions.client,name:document_management_system.action_dms_help
+#: model:ir.ui.menu,name:document_management_system.menu_dms_help
+msgid "Project Files Guide"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/project_project.py:0
+#, python-format
+msgid ""
+"Project file access is kept up to date by the system and cannot be changed "
+"by hand."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid ""
+"Project files are never deleted. A Document Management administrator can "
+"remove a file's link instead."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid "Project files cannot be duplicated."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.ui.menu,name:document_management_system.menu_dms_projects
+msgid "Projects"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_res_config_settings__dms_projects_folder_id
+msgid "Projects Folder ID"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.actions.act_window,name:document_management_system.action_dms_projects
+msgid "Projects with Files"
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.dms_file_view_form
+msgid "Remove"
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.dms_file_view_form
+msgid ""
+"Remove this file? Its link is deleted, so nobody can open it from Odoo any "
+"more. The file itself stays in SharePoint."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields.selection,name:document_management_system.selection__dms_file__state__removed
+msgid "Removed"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid ""
+"Removed by %s: its link was deleted, so nobody can open it from Odoo. The "
+"file is still in SharePoint."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_add_wizard__replace_current
+msgid "Replace the current file"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__message_has_sms_error
+msgid "SMS Delivery error"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_res_config_settings__dms_secret_set
+msgid "Secret in odoo.conf"
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.dms_file_view_form
+msgid "SharePoint"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_project_project__dms_folder_item_id
+msgid "SharePoint Folder ID"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_add_wizard__link
+msgid "SharePoint Link"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid ""
+"SharePoint answered with an error (%s %s). Try again, or ask an "
+"administrator."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid "SharePoint could not be reached. Try again in a moment."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/res_users.py:0
+#, python-format
+msgid "SharePoint did not return the folder's address. Try again in a moment."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/res_users.py:0
+#, python-format
+msgid ""
+"SharePoint is not set up yet. An administrator fills in the document library"
+" and the \"Intake\" folder in Settings > Document Management."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/project_project.py:0
+#, python-format
+msgid ""
+"SharePoint is not set up yet. An administrator fills in the document library"
+" and the \"Projects\" folder in Settings > Document Management."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid ""
+"SharePoint is not set up yet: the connection settings or the client secret "
+"are missing."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid ""
+"SharePoint refused access (%s). An administrator checks the app's access to "
+"the site."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields.selection,name:document_management_system.selection__dms_file__state__shared
+#: model_terms:ir.ui.view,arch_db:document_management_system.dms_file_view_search
+msgid "Shared"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_res_config_settings__dms_site_id
+msgid "Site ID"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__size
+msgid "Size"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid ""
+"Someone else added a file for %s at the same moment. Reload the project to "
+"see it; to replace it, add the file again with \"Replace the current file\"."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid ""
+"Someone else changed this project's files at the same moment. Reload the "
+"project and try again."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__source
+msgid "Source"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__state
+msgid "State"
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.dms_file_view_search
+msgid "Status"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields.selection,name:document_management_system.selection__dms_file__state__superseded
+#: model_terms:ir.ui.view,arch_db:document_management_system.dms_file_view_search
+msgid "Superseded"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,help:document_management_system.field_dms_file__state
+msgid "Superseded: a newer file exists for the same document number."
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.edit_project_inherit_dms
+msgid "Sync now"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_res_config_settings__dms_tenant_id
+msgid "Tenant ID"
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.res_config_settings_view_form
+msgid "Test connection"
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.res_config_settings_view_form
+msgid ""
+"The Entra ID app with the Sites.Selected permission. Its client secret is\n"
+"                                    read from odoo.conf (dms_graph_client_secret), never stored here."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,help:document_management_system.field_res_users__dms_m365_email
+msgid ""
+"The address this user signs in to Microsoft 365 with. Empty: the login is "
+"used."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/res_config_settings.py:0
+#, python-format
+msgid "The client secret is missing: add %s to odoo.conf and restart Odoo."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,help:document_management_system.field_dms_file_add_wizard__replace_current
+msgid "The current file stays in SharePoint, marked as superseded."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/wizard/dms_file_add_wizard.py:0
+#, python-format
+msgid "The file could not be read. Choose it again."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid "The file could not be removed. %s"
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.dms_file_add_wizard_view_form
+msgid ""
+"The file goes into the project's SharePoint folder and only the project's members can open it.\n"
+"                    <span attrs=\"{'invisible': [('mode', '!=', 'upload')]}\">\n"
+"                        Uploads are limited to 128 MB unless your administrator changed it; for larger files, paste a\n"
+"                        SharePoint link instead.\n"
+"                    </span>"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/project_project.py:0
+#, python-format
+msgid "The file is no longer in SharePoint."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,help:document_management_system.field_dms_file__name
+msgid "The file name in SharePoint."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,help:document_management_system.field_dms_file_add_wizard__link
+msgid ""
+"The link of a file in your own upload folder (in SharePoint: the file's "
+"\"Copy link\")."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,help:document_management_system.field_dms_file_add_wizard__number_id
+msgid ""
+"The number this file belongs to: the file is then named after it. Leave "
+"empty for other files."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,help:document_management_system.field_dms_file__unique_code_id
+#: model:ir.model.fields,help:document_management_system.field_dms_file_add_wizard__unique_code_id
+#: model:ir.model.fields,help:document_management_system.field_project_project__dms_unique_code_id
+msgid ""
+"The project code whose files this project holds. Its SharePoint folder is "
+"Projects/<year>/<code>/."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/project_project.py:0
+#, python-format
+msgid "The project folder could not be created in SharePoint. %s"
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.res_config_settings_view_form
+msgid ""
+"The site, its document library, and the two top folders in that library."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,help:document_management_system.field_dms_file__share_url
+msgid ""
+"The specific-people link. SharePoint refuses anyone who is not a project "
+"member."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/project_project.py:0
+#, python-format
+msgid ""
+"The sync did not finish: %s It is tried again automatically every 5 minutes."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/res_users.py:0
+#, python-format
+msgid "The upload folder is set by the system."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid "This file has no link any more."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid "This item"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid ""
+"This link does not lead to a file Odoo can open. Copy the link of the file "
+"in your upload folder again."
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.dms_file_add_wizard_view_form
+msgid "This number already has a file:"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/project_project.py:0
+#, python-format
+msgid "This project has no unique code, so it has no files to sync."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.constraint,message:document_management_system.constraint_project_project_dms_unique_code_uniq
+msgid "This unique code is already linked to another project."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/project_project.py:0
+#, python-format
+msgid "This unique code is already linked to project %s."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.constraint,message:document_management_system.constraint_dms_file_grant_file_user_uniq
+msgid "This user already has access to this file."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__unique_code_id
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_add_wizard__unique_code_id
+#: model:ir.model.fields,field_description:document_management_system.field_project_project__dms_unique_code_id
+msgid "Unique Code"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_project_project__dms_unique_code_name
+msgid "Unique Code Name"
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.view_project_kanban_inherit_dms
+msgid "Unique code"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/project_project.py:0
+#, python-format
+msgid ""
+"Unique code %(code)s belongs to %(company)s, not to the project's company."
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/project_project.py:0
+#, python-format
+msgid "Unique code %s is archived and cannot be linked to a project."
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__message_unread
+msgid "Unread Messages"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__message_unread_counter
+msgid "Unread Messages Counter"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields.selection,name:document_management_system.selection__project_project__dms_sync_state__ok
+msgid "Up to date"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_res_users__dms_intake_item_id
+msgid "Upload Folder ID"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields.selection,name:document_management_system.selection__dms_file_add_wizard__mode__upload
+msgid "Upload from this computer"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__uploaded_by_id
+msgid "Uploaded By"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__uploaded_on
+msgid "Uploaded On"
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.dms_file_view_search
+msgid "Uploaded by me"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields.selection,name:document_management_system.selection__dms_file__source__upload
+msgid "Uploaded in Odoo"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file_grant__user_id
+#: model:res.groups,name:document_management_system.group_dms_user
+msgid "User"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model,name:document_management_system.model_res_users
+msgid "Users"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,field_description:document_management_system.field_dms_file__website_message_ids
+msgid "Website Messages"
+msgstr ""
+
+#. module: document_management_system
+#: model:ir.model.fields,help:document_management_system.field_dms_file__website_message_ids
+msgid "Website communication history"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/dms_file.py:0
+#, python-format
+msgid ""
+"Where a file lives and who may open it can only be changed by the system."
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.edit_project_inherit_dms
+msgid "Who can open the files"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/res_users.py:0
+#, python-format
+msgid "Your upload folder could not be prepared. %s"
+msgstr ""
+
+#. module: document_management_system
+#: code:addons/document_management_system/models/res_users.py:0
+#, python-format
+msgid ""
+"Your user has no Microsoft 365 address. Ask a Document Management "
+"administrator to set it on your user."
+msgstr ""
+
+#. module: document_management_system
+#: model_terms:ir.ui.view,arch_db:document_management_system.dms_file_add_wizard_view_form
+msgid "https://..."
+msgstr ""

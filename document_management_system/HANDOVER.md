@@ -17,7 +17,9 @@ Odoo 14 Community module. Project files live in SharePoint, one folder per uniqu
 - Members of a project = the active internal users who can open the project in Odoo (Odoo's own project access rules decide), with a Microsoft 365 address. Agreed on 2026-11-05.
 - A file of a cancelled number is deleted from SharePoint by the next sync; Odoo keeps its record as removed. Agreed on 2026-11-05.
 - Only Document Management administrators link a unique code; one project per code; the code cannot change once files exist.
-- Numbered files: active numbers of the project's code, of the user's own division (numbering administrators excepted). One shared file per number; replacing needs confirmation.
+- Numbered files: active numbers of the project's code, of the user's own division (numbering administrators excepted). One shared file per number; replacing needs confirmation. When two people add one at the same moment, the unique index stops the second inside a savepoint: they get a clear message and their upload is removed (or their pasted file moved back).
+- The file count on the kanban card and the project's Files button counts current (shared) files, the same files the list behind it shows; superseded and removed ones stay on the Files tab as history.
+- Archived unique codes cannot be linked.
 - Pasted links: a file (not a folder), directly in the user's own upload folder, in the configured library, not added before.
 - Protected fields change only through the module's own methods running with `sudo()`, checked with `env.su`.
 - Never store file contents in Odoo; never show SharePoint's `webUrl` of a project file; never create anonymous, organisation-wide or edit links; never give access to a folder except a user's own upload folder.
@@ -31,12 +33,16 @@ Odoo 14 Community module. Project files live in SharePoint, one folder per uniqu
 ## Deploying
 Replace the module folder on the server, run `-u document_management_system` on every database that has it, restart Odoo (assets are cached until a restart).
 
+Uninstalling removes everything the module added to Odoo (checked: no tables, columns, views, menus, crons or groups left; the connection settings stay, as Odoo keeps parameters). It never touches SharePoint: folders, files and their links stay there.
+
 ## External services
 - Microsoft Graph, application permission `Sites.Selected` with `fullcontrol` on one site. The client secret is the `dms_graph_client_secret` key in `odoo.conf`; tenant, client, site, library and folder IDs are system parameters (Settings > Document Management).
 - Not yet verified against a live tenant: run `scripts/poc_graph.py` (repository root) against the test site first.
 
 ## Known traps
 - Odoo hides archived users when reading a many2many: compare stored members with `active_test=False`, or deactivated users keep their access.
+- Member upkeep must stay one access query per user (`_dms_visible_to`), never one per user and project: the first version took 25 seconds per user change with 150 projects and 80 users. A test guards it.
 - Computed fields that depend on the user need `@api.depends_context('uid')`.
 - SharePoint does not say which permissions are inherited, so only links (and the uploader's own direct permission after a move) are ever deleted.
-- Odoo 14 draws its screens on phones as a shrunken desktop page; install OCA `web_responsive` for phones.
+- Odoo 14 draws its screens on phones as a shrunken desktop page; install OCA `web_responsive` for phones (not yet tested with this module).
+- Text the module adds uses `.o_dms_note` ($gray-600, 4.69:1) rather than `text-muted` (2.07:1 on white) to meet WCAG AA. Odoo's own purple buttons and links (3.97:1) are left as Odoo styles them, like in every other app.

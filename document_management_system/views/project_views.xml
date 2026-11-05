@@ -26,7 +26,7 @@
                             <field name="dms_last_error" attrs="{'invisible': [('dms_last_error', '=', False)]}"/>
                         </group>
                     </group>
-                    <div class="text-muted mb16" attrs="{'invisible': [('dms_unique_code_id', '!=', False)]}">
+                    <div class="o_dms_note mb16" attrs="{'invisible': [('dms_unique_code_id', '!=', False)]}">
                         Files can be added once a Document Management administrator links this project to its
                         unique code.
                     </div>
@@ -39,7 +39,7 @@
                                 class="btn-secondary ml8" groups="document_management_system.group_dms_manager"/>
                     </div>
                     <field name="dms_file_ids" readonly="1" attrs="{'invisible': [('dms_unique_code_id', '=', False)]}">
-                        <tree decoration-muted="state in ('superseded', 'removed')" decoration-danger="state == 'error'">
+                        <tree decoration-danger="state == 'error'">
                             <field name="name"/>
                             <field name="number_id"/>
                             <field name="uploaded_by_id" widget="many2one_avatar_user"/>
@@ -53,7 +53,7 @@
                     </field>
                     <group string="Who can open the files" attrs="{'invisible': [('dms_unique_code_id', '=', False)]}">
                         <field name="dms_member_user_ids" widget="many2many_tags" readonly="1"/>
-                        <div class="text-muted" colspan="2">
+                        <div class="o_dms_note" colspan="2">
                             Everyone who can open this project in Odoo. To change it, change who has access to the
                             project (Settings tab, Visibility and invited users).
                         </div>
@@ -75,7 +75,7 @@
                 <field name="dms_file_count"/>
             </xpath>
             <xpath expr="//div[hasclass('o_primary')]" position="inside">
-                <span t-if="record.dms_unique_code_id.raw_value" class="badge badge-pill badge-info o_dms_code_badge"
+                <span t-if="record.dms_unique_code_id.raw_value" class="badge badge-pill o_dms_code_badge"
                       title="Unique code">
                     <t t-esc="record.dms_unique_code_name.value"/>
                 </span>

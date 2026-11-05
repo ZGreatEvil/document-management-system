@@ -1,4 +1,10 @@
-// colours come from odoo's scss variables only, so a backend theme recolours this
+// colours come from odoo's scss variables only, so a backend theme recolours this.
+// every text the module adds meets wcag aa (4.5:1): odoo's text-muted is only 2.07:1 on white
+
+// notes and hints the module writes ($gray-600 on white: 4.69:1)
+.o_dms_note {
+    color: $gray-600;
+}
 
 .o_dms_help {
     overflow: auto;
@@ -13,6 +19,10 @@
     color: $o-main-text-color;
     line-height: 1.6;
     overflow-wrap: break-word;
+
+    h1, h2, h3 {
+        color: $o-main-text-color;
+    }
 
     h1 {
         font-size: 1.75rem;
@@ -31,8 +41,16 @@
         margin-bottom: map-get($spacers, 1);
     }
 
+    a {
+        color: darken($o-brand-primary, 15%);
+    }
+
     code {
         white-space: normal;
+        color: $o-main-text-color;
+        background-color: $o-gray-100;
+        padding: 0 map-get($spacers, 1);
+        border-radius: $border-radius;
     }
 
     dt {
@@ -46,11 +64,11 @@
 
 .o_dms_help_lead {
     font-size: 1.1rem;
-    color: $text-muted;
+    color: $gray-600;
 }
 
 .o_dms_help_muted {
-    color: $text-muted;
+    color: $gray-600;
     margin-bottom: map-get($spacers, 1);
 }
 
@@ -81,8 +99,12 @@
     margin-right: map-get($spacers, 1);
 }
 
-// the unique code on the project card
+// the unique code on the project card: dark text on a light pill (bootstrap's badge-info is only 3.04:1)
 .o_dms_code_badge {
     margin-left: map-get($spacers, 1);
     vertical-align: middle;
+    color: $o-main-text-color;
+    background-color: $o-gray-100;
+    border: 1px solid $border-color;
+    font-weight: normal;
 }

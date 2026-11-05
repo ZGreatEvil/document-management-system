@@ -33,16 +33,17 @@ class ResUsers(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         users = super().create(vals_list)
-        if users.filtered(lambda u: not u.share):
-            _all_linked_projects(self.env)._dms_update_members()
+        internal = users.filtered(lambda u: not u.share)
+        if internal:
+            _all_linked_projects(self.env)._dms_update_members(users=internal)
         return users
 
     def write(self, vals):
         result = super().write(vals)
         if USER_FIELDS & set(vals):
             Project = self.env['project.project'].sudo()
-            # being reactivated or given more rights can open any project: rare, so all are checked
-            _all_linked_projects(self.env)._dms_update_members()
+            # only these users can have gained or lost projects: one query each, however many projects
+            _all_linked_projects(self.env)._dms_update_members(users=self)
             if ADDRESS_FIELDS & set(vals):
                 # same members, other address: their files must be granted to the new one
                 projects = Project.search([('dms_member_user_ids', 'in', self.ids)])
@@ -55,7 +56,11 @@ class ResGroups(models.Model):
     _inherit = 'res.groups'
 
     def write(self, vals):
+        if not GROUP_FIELDS & set(vals):
+            return super().write(vals)
+        # the users who were in these groups before or are now: only their rights can have changed
+        before = self.sudo().with_context(active_test=False).mapped('users')
         result = super().write(vals)
-        if GROUP_FIELDS & set(vals):
-            _all_linked_projects(self.env)._dms_update_members()
+        after = self.sudo().with_context(active_test=False).mapped('users')
+        _all_linked_projects(self.env)._dms_update_members(users=before | after)
         return result

@@ -85,6 +85,9 @@ var SECTIONS = [
             '<dt>"... is a folder"</dt><dd>Salin tautan file-nya, bukan tautan folder.</dd>' +
             '<dt>"... has already been added"</dt><dd>File itu sudah ada di sebuah proyek.</dd>' +
             '<dt>"... is already in the project folder"</dt><dd>Untuk versi baru, tambahkan revisi pada nomornya dulu.</dd>' +
+            '<dt>"Someone else added a file for ... at the same moment"</dt><dd>Orang lain menambahkan file untuk ' +
+            'nomor yang sama tepat pada saat yang sama. Muat ulang proyek untuk melihatnya. Bila file Anda yang ' +
+            'benar, tambahkan lagi dan centang <strong>Replace the current file</strong>.</dd>' +
             '<dt>SharePoint menolak saat membuka file</dt><dd>Anda tidak (lagi) menjadi anggota proyek, atau ' +
             'perubahan anggota belum selesai diproses. Tunggu beberapa menit dan coba lagi.</dd>' +
             '<dt>Tidak ada tab Files atau tombol Add file</dt><dd>Proyek belum dihubungkan ke kode unik. Minta admin ' +
@@ -97,7 +100,8 @@ var SECTIONS = [
             '<li><strong>Sync now:</strong> memperbarui akses semua file proyek sekarang juga, tanpa menunggu ' +
             'pembaruan otomatis (setiap 5 menit).</li>' +
             '<li><strong>Remove:</strong> di form file, menghapus tautannya sehingga tidak ada yang bisa membukanya ' +
-            'lewat Odoo. File tetap ada di SharePoint.</li>' +
+            'lewat Odoo. File tetap ada di SharePoint dengan nama "... (removed tanggal)", sehingga file pengganti ' +
+            'untuk nomor yang sama bisa ditambahkan.</li>' +
             '<li><strong>Alamat Microsoft 365:</strong> di form user, tab <em>Document Management</em>. ' +
             'Bila kosong, login user yang dipakai.</li>' +
             '<li><strong>Koneksi:</strong> Settings &gt; Document Management, lalu <strong>Test connection</strong>.</li></ul>'
